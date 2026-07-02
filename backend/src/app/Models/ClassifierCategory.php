@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+/**
+ * Категория предмета закупки (2-й уровень классификатора).
+ *
+ * @property int $id Идентификатор
+ * @property int $company_group_id Группа компаний
+ * @property string $name Категория: СМР, ПИР, ИТ и т.д.
+ * @property int $sort_order Порядок сортировки
+ * @property bool $is_active Активна ли категория
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at Дата мягкого удаления
+ */
+class ClassifierCategory extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'company_group_id',
+        'name',
+        'sort_order',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'sort_order' => 'integer',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function companyGroup(): BelongsTo
+    {
+        return $this->belongsTo(CompanyGroup::class);
+    }
+
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_category_subscriptions');
+    }
+}
