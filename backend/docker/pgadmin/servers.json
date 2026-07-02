@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "ETP (postgres-etp)",
+      "Group": "ETP",
+      "Host": "postgres-etp",
+      "Port": 5432,
+      "MaintenanceDB": "etp",
+      "Username": "etp",
+      "SSLMode": "prefer",
+      "PassFile": "/pgpass",
+      "Comment": "Автоподключение к PostgreSQL из docker-compose"
+    }
+  }
+}
