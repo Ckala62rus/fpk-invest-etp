@@ -27,6 +27,11 @@ class AuctionProtocol extends Model
         'template_version',
     ];
 
+    /**
+     * Преобразование атрибутов протокола аукциона в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -35,11 +40,21 @@ class AuctionProtocol extends Model
         ];
     }
 
+    /**
+     * Процедура-аукцион, для которой сформирован протокол.
+     *
+     * Нужен для скачивания протокола из карточки процедуры и публикации на публичной странице.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Администратор, сформировавший PDF-протокол аукциона.
+     *
+     * Используется для аудита формирования протоколов и отображения ответственного лица.
+     */
     public function generatedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by');

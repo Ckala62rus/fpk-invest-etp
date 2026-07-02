@@ -36,6 +36,11 @@ class AuctionBid extends Model
         'ip_address',
     ];
 
+    /**
+     * Преобразование атрибутов ставки в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -46,21 +51,41 @@ class AuctionBid extends Model
         ];
     }
 
+    /**
+     * Процедура-аукцион, в рамках которой подана ставка.
+     *
+     * Нужен для отображения ставок на странице аукциона и определения победителя по процедуре.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Лот аукциона, на который подана ставка.
+     *
+     * Используется для расчёта лучшей ставки и определения победителя по каждому лоту отдельно.
+     */
     public function lot(): BelongsTo
     {
         return $this->belongsTo(ProcedureLot::class, 'lot_id');
     }
 
+    /**
+     * Участник, подавший ставку.
+     *
+     * Нужен для отображения автора ставки администратору; участники видят только свои ставки.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Администратор, отменивший ставку.
+     *
+     * Используется для аудита отмены ставок и отображения причины в журнале аукциона.
+     */
     public function cancelledByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'cancelled_by');

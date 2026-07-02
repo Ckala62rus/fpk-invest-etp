@@ -21,6 +21,11 @@ class Permission extends Model
         'group',
     ];
 
+    /**
+     * Роли, которым назначено это право доступа.
+     *
+     * Нужен для управления матрицей RBAC и проверки разрешений при авторизации действий.
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_permission');

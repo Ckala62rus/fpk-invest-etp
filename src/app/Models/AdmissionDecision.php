@@ -30,6 +30,11 @@ class AdmissionDecision extends Model
         'clarification_deadline',
     ];
 
+    /**
+     * Преобразование атрибутов решения о допуске в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -39,11 +44,21 @@ class AdmissionDecision extends Model
         ];
     }
 
+    /**
+     * Заявка, к которой относится это решение о допуске.
+     *
+     * Нужен для отображения статуса допуска в карточке заявки и в списке участников процедуры.
+     */
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);
     }
 
+    /**
+     * Администратор, принявший решение о допуске или недопуске.
+     *
+     * Используется для аудита решений и отображения ответственного лица в карточке заявки.
+     */
     public function decidedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'decided_by');

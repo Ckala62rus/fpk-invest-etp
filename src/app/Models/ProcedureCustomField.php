@@ -34,6 +34,11 @@ class ProcedureCustomField extends Model
         'sort_order',
     ];
 
+    /**
+     * Преобразование атрибутов настраиваемого поля в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -45,11 +50,21 @@ class ProcedureCustomField extends Model
         ];
     }
 
+    /**
+     * Процедура, для которой настроено это дополнительное поле.
+     *
+     * Нужен для формирования формы заявки и отображения настраиваемых полей в карточке процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Все значения этого поля, заполненные участниками в заявках.
+     *
+     * Используется для получения ответов по конкретному полю при рассмотрении заявок.
+     */
     public function proposalFieldValues(): HasMany
     {
         return $this->hasMany(ProposalFieldValue::class);

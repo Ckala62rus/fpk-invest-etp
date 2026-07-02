@@ -29,6 +29,11 @@ class UserNotificationSetting extends Model
         'notify_hour_before',
     ];
 
+    /**
+     * Преобразование флагов настроек оповещений в тип boolean.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -40,6 +45,11 @@ class UserNotificationSetting extends Model
         ];
     }
 
+    /**
+     * Пользователь, для которого заданы настройки email-оповещений.
+     *
+     * Нужен для проверки подписок при рассылке уведомлений о новых процедурах и напоминаниях.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

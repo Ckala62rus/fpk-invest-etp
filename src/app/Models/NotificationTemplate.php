@@ -30,6 +30,11 @@ class NotificationTemplate extends Model
         'is_active',
     ];
 
+    /**
+     * Преобразование атрибутов шаблона уведомления в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,6 +43,11 @@ class NotificationTemplate extends Model
         ];
     }
 
+    /**
+     * Все записи об отправке писем по этому шаблону.
+     *
+     * Нужен для мониторинга доставки уведомлений и анализа ошибок отправки.
+     */
     public function emailSendLogs(): HasMany
     {
         return $this->hasMany(EmailSendLog::class, 'template_id');

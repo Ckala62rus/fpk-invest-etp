@@ -47,6 +47,11 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
 
+    /**
+     * Преобразование атрибутов учётной записи в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -59,41 +64,81 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Профиль пользователя с данными регистрации (наименование, телефон, руководитель).
+     *
+     * Нужен для отображения карточки участника, ЛК и проверки полноты данных при допуске к ТЗП.
+     */
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
     }
 
+    /**
+     * Дополнительные email-адреса пользователя, указанные при регистрации.
+     *
+     * Используется для рассылок и проверки дубликатов email при регистрации новых участников.
+     */
     public function emails(): HasMany
     {
         return $this->hasMany(UserEmail::class);
     }
 
+    /**
+     * Учредительные и регистрационные документы пользователя.
+     *
+     * Нужен администратору при модерации регистрации и для контроля срока действия документов (1 год).
+     */
     public function documents(): HasMany
     {
         return $this->hasMany(UserDocument::class);
     }
 
+    /**
+     * Роли RBAC, назначенные пользователю (super_admin, trade_admin, auditor, participant, guest).
+     *
+     * Определяет доступ к разделам админки, API и видимость данных на площадке.
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_role');
     }
 
+    /**
+     * Администратор, который одобрил регистрацию этого пользователя.
+     *
+     * Нужен для аудита: кто активировал учётную запись участника.
+     */
     public function approver(): BelongsTo
     {
         return $this->belongsTo(self::class, 'approved_by');
     }
 
+    /**
+     * Настройки email-оповещений пользователя (категории, аукционы, напоминания).
+     *
+     * Используется при формировании рассылок, чтобы не отправлять письма отписавшимся участникам.
+     */
     public function notificationSettings(): HasOne
     {
         return $this->hasOne(UserNotificationSetting::class);
     }
 
+    /**
+     * Категории классификатора, на которые подписан участник.
+     *
+     * По подпискам определяется, о каких новых ТЗП и аукционах участник получает email-уведомления.
+     */
     public function categorySubscriptions(): BelongsToMany
     {
         return $this->belongsToMany(ClassifierCategory::class, 'user_category_subscriptions');
     }
 
+    /**
+     * Группы компаний холдинга, на которые подписан участник.
+     *
+     * Позволяет получать оповещения о закупках конкретных предприятий холдинга (1-й уровень классификатора).
+     */
     public function companyGroupSubscriptions(): BelongsToMany
     {
         return $this->belongsToMany(CompanyGroup::class, 'user_company_group_subscriptions');

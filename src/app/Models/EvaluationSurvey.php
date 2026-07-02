@@ -28,6 +28,11 @@ class EvaluationSurvey extends Model
         'reminder_stage',
     ];
 
+    /**
+     * Преобразование атрибутов опроса в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -37,11 +42,21 @@ class EvaluationSurvey extends Model
         ];
     }
 
+    /**
+     * Завершённая процедура, по которой проводится опрос качества.
+     *
+     * Нужен для привязки оценки к конкретной закупке и отображения результатов в карточке процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Все ответы заказчика на вопросы опроса.
+     *
+     * Используется для формирования итоговой оценки и аналитики качества закупок.
+     */
     public function responses(): HasMany
     {
         return $this->hasMany(EvaluationResponse::class, 'survey_id');

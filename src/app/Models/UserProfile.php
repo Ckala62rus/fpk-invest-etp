@@ -34,6 +34,11 @@ class UserProfile extends Model
         'pd_consent_at',
     ];
 
+    /**
+     * Преобразование атрибутов профиля пользователя в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -43,6 +48,11 @@ class UserProfile extends Model
         ];
     }
 
+    /**
+     * Учётная запись пользователя, к которой относится профиль.
+     *
+     * Нужен для отображения данных регистрации в карточке участника и проверки полноты профиля при допуске.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

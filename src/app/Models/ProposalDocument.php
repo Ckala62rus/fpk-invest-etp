@@ -26,6 +26,11 @@ class ProposalDocument extends Model
         'type',
     ];
 
+    /**
+     * Преобразование атрибутов документа заявки в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -33,6 +38,11 @@ class ProposalDocument extends Model
         ];
     }
 
+    /**
+     * Заявка, к которой прикреплён документ.
+     *
+     * Нужен для скачивания файлов КП и сопутствующих документов при рассмотрении заявки.
+     */
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);

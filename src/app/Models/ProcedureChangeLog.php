@@ -36,6 +36,11 @@ class ProcedureChangeLog extends Model
         'notifications_sent_at',
     ];
 
+    /**
+     * Преобразование атрибутов записи изменений процедуры в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -47,16 +52,31 @@ class ProcedureChangeLog extends Model
         ];
     }
 
+    /**
+     * Процедура, документация которой была изменена.
+     *
+     * Нужен для отображения истории изменений в карточке процедуры и уведомления участников.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Администратор, внёсший изменения в документацию процедуры.
+     *
+     * Используется для аудита правок и отображения автора изменений.
+     */
     public function changedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'changed_by');
     }
 
+    /**
+     * Администратор, согласовавший изменения документации.
+     *
+     * Нужен для контроля workflow согласования и фиксации ответственного за утверждение.
+     */
     public function approvedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');

@@ -23,6 +23,11 @@ class Role extends Model
         'is_system',
     ];
 
+    /**
+     * Преобразование атрибутов роли в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -30,11 +35,21 @@ class Role extends Model
         ];
     }
 
+    /**
+     * Пользователи, которым назначена эта роль.
+     *
+     * Нужен для управления составом ролей и проверки прав доступа в RBAC.
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_role');
     }
 
+    /**
+     * Права доступа, входящие в эту роль.
+     *
+     * Используется для настройки матрицы разрешений и авторизации действий пользователя.
+     */
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class, 'role_permission');

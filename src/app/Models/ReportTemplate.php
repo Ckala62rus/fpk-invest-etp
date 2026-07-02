@@ -26,6 +26,11 @@ class ReportTemplate extends Model
         'created_by',
     ];
 
+    /**
+     * Преобразование атрибутов шаблона отчёта в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -34,11 +39,21 @@ class ReportTemplate extends Model
         ];
     }
 
+    /**
+     * Пользователь, создавший шаблон отчёта.
+     *
+     * Нужен для аудита создания шаблонов и отображения автора в списке отчётов.
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Все запуски формирования отчёта по этому шаблону.
+     *
+     * Используется для отображения истории генераций и скачивания ранее сформированных файлов.
+     */
     public function runs(): HasMany
     {
         return $this->hasMany(ReportRun::class, 'template_id');

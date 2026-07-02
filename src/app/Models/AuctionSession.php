@@ -27,6 +27,11 @@ class AuctionSession extends Model
         'is_online',
     ];
 
+    /**
+     * Преобразование атрибутов сессии посещения аукциона в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -36,11 +41,21 @@ class AuctionSession extends Model
         ];
     }
 
+    /**
+     * Процедура-аукцион, страницу которой посещает участник.
+     *
+     * Нужен для подсчёта онлайн-участников и отображения счётчика зрителей на странице аукциона.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Участник, посетивший страницу аукциона (null для анонимного гостя).
+     *
+     * Используется для учёта активности участников и отображения списка присутствующих администратору.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

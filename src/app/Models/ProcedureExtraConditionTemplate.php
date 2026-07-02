@@ -24,6 +24,11 @@ class ProcedureExtraConditionTemplate extends Model
         'is_active',
     ];
 
+    /**
+     * Преобразование атрибутов шаблона дополнительного условия в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -32,6 +37,11 @@ class ProcedureExtraConditionTemplate extends Model
         ];
     }
 
+    /**
+     * Все значения этого условия, заданные для конкретных процедур.
+     *
+     * Нужен для управления справочником условий и отображения применённых значений в аукционах.
+     */
     public function values(): HasMany
     {
         return $this->hasMany(ProcedureExtraConditionValue::class, 'template_id');

@@ -26,6 +26,11 @@ class ProposalAccessLog extends Model
         'ip_address',
     ];
 
+    /**
+     * Преобразование атрибутов записи доступа к заявке в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -33,11 +38,21 @@ class ProposalAccessLog extends Model
         ];
     }
 
+    /**
+     * Заявка, к которой был выполнен доступ (просмотр или скачивание).
+     *
+     * Нужен для аудита обращений к конфиденциальным данным заявки.
+     */
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);
     }
 
+    /**
+     * Пользователь, выполнивший действие с заявкой.
+     *
+     * Используется для фиксации, кто и когда просматривал или скачивал материалы заявки.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

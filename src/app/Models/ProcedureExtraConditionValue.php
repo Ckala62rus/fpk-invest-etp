@@ -23,11 +23,21 @@ class ProcedureExtraConditionValue extends Model
         'value',
     ];
 
+    /**
+     * Процедура, для которой задано значение дополнительного условия.
+     *
+     * Нужен для отображения условий аукциона (отсрочка, доставка и т.д.) на странице процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Шаблон дополнительного условия из справочника.
+     *
+     * Используется для получения названия и типа поля условия при формировании карточки аукциона.
+     */
     public function template(): BelongsTo
     {
         return $this->belongsTo(ProcedureExtraConditionTemplate::class, 'template_id');

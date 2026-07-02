@@ -22,6 +22,11 @@ class UserEmail extends Model
         'email',
     ];
 
+    /**
+     * Пользователь, которому принадлежит дополнительный email.
+     *
+     * Нужен для рассылок на все адреса участника и проверки дубликатов при регистрации.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

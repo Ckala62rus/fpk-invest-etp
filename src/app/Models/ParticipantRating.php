@@ -28,6 +28,11 @@ class ParticipantRating extends Model
         'comment',
     ];
 
+    /**
+     * Преобразование атрибутов оценки участника в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -36,11 +41,21 @@ class ParticipantRating extends Model
         ];
     }
 
+    /**
+     * Победитель процедуры, получивший оценку от заказчика.
+     *
+     * Нужен для отображения рейтинга участника в его профиле и истории выступлений.
+     */
     public function winner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'winner_user_id');
     }
 
+    /**
+     * Процедура, по итогам которой выставлена оценка.
+     *
+     * Используется для связи оценки с конкретной закупкой и отображения в карточке процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);

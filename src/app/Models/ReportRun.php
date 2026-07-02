@@ -30,6 +30,11 @@ class ReportRun extends Model
         'generated_at',
     ];
 
+    /**
+     * Преобразование атрибутов запуска отчёта в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -39,11 +44,21 @@ class ReportRun extends Model
         ];
     }
 
+    /**
+     * Шаблон отчёта, по которому выполнено формирование.
+     *
+     * Нужен для связи сгенерированного файла с конфигурацией выборки и колонок.
+     */
     public function template(): BelongsTo
     {
         return $this->belongsTo(ReportTemplate::class, 'template_id');
     }
 
+    /**
+     * Пользователь, инициировавший формирование отчёта.
+     *
+     * Используется для аудита генерации отчётов и отображения автора в истории запусков.
+     */
     public function generatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by');

@@ -35,6 +35,11 @@ class EmailSendLog extends Model
         'sent_at',
     ];
 
+    /**
+     * Преобразование атрибутов записи отправки email в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -44,11 +49,21 @@ class EmailSendLog extends Model
         ];
     }
 
+    /**
+     * Шаблон письма, по которому была выполнена отправка.
+     *
+     * Нужен для анализа истории рассылок и отладки проблем с конкретным шаблоном уведомлений.
+     */
     public function template(): BelongsTo
     {
         return $this->belongsTo(NotificationTemplate::class, 'template_id');
     }
 
+    /**
+     * Пользователь-получатель письма (если известен).
+     *
+     * Используется для отображения истории уведомлений в карточке пользователя.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

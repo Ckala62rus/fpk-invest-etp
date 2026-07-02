@@ -33,6 +33,11 @@ class CmsPage extends Model
         'sort_order',
     ];
 
+    /**
+     * Преобразование атрибутов страницы CMS в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -41,6 +46,11 @@ class CmsPage extends Model
         ];
     }
 
+    /**
+     * Все ревизии (версии) содержимого страницы.
+     *
+     * Нужен для хранения истории редактирования и отката к предыдущей версии контента.
+     */
     public function revisions(): HasMany
     {
         return $this->hasMany(CmsPageRevision::class, 'page_id');

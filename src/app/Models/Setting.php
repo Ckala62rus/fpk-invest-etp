@@ -29,6 +29,11 @@ class Setting extends Model
         'updated_by',
     ];
 
+    /**
+     * Преобразование значения настройки из JSON в массив PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -36,6 +41,11 @@ class Setting extends Model
         ];
     }
 
+    /**
+     * Пользователь, последним изменивший значение настройки.
+     *
+     * Нужен для аудита изменений глобальных параметров ЭТП.
+     */
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');

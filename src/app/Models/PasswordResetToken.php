@@ -26,6 +26,11 @@ class PasswordResetToken extends Model
         'used_at',
     ];
 
+    /**
+     * Преобразование атрибутов токена восстановления пароля в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -34,6 +39,11 @@ class PasswordResetToken extends Model
         ];
     }
 
+    /**
+     * Пользователь, для которого выпущен токен восстановления пароля.
+     *
+     * Нужен для привязки ссылки восстановления к учётной записи и инвалидации токена после смены пароля.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

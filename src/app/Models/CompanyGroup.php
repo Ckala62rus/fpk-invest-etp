@@ -28,6 +28,11 @@ class CompanyGroup extends Model
         'is_active',
     ];
 
+    /**
+     * Преобразование атрибутов группы компаний в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -36,16 +41,31 @@ class CompanyGroup extends Model
         ];
     }
 
+    /**
+     * Категории предмета закупки (2-й уровень классификатора) внутри группы.
+     *
+     * Нужен для построения справочника категорий СМР, ПИР, ИТ и подписки участников на оповещения.
+     */
     public function classifierCategories(): HasMany
     {
         return $this->hasMany(ClassifierCategory::class);
     }
 
+    /**
+     * Предприятия-заказчики, входящие в группу компаний холдинга.
+     *
+     * Используется для управления структурой заказчиков и привязки процедур к предприятиям.
+     */
     public function companies(): HasMany
     {
         return $this->hasMany(Company::class);
     }
 
+    /**
+     * Участники, подписанные на оповещения по процедурам этой группы компаний.
+     *
+     * Нужен для рассылки уведомлений о новых торгах в рамках выбранного холдинга.
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_company_group_subscriptions');

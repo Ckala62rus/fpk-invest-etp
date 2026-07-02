@@ -24,11 +24,21 @@ class CmsPageRevision extends Model
         'revised_by',
     ];
 
+    /**
+     * Страница CMS, к которой относится эта ревизия.
+     *
+     * Нужен для навигации из истории версий к редактируемой странице.
+     */
     public function page(): BelongsTo
     {
         return $this->belongsTo(CmsPage::class, 'page_id');
     }
 
+    /**
+     * Администратор, создавший эту версию содержимого.
+     *
+     * Используется для аудита изменений контента и отображения автора правки.
+     */
     public function revisedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revised_by');

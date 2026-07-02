@@ -29,6 +29,11 @@ class EvaluationSurveyTemplate extends Model
         'conditional_logic',
     ];
 
+    /**
+     * Преобразование атрибутов шаблона вопроса в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -39,6 +44,11 @@ class EvaluationSurveyTemplate extends Model
         ];
     }
 
+    /**
+     * Все ответы участников на этот вопрос опроса.
+     *
+     * Нужен для агрегации статистики по конкретному вопросу и построения отчётов качества.
+     */
     public function responses(): HasMany
     {
         return $this->hasMany(EvaluationResponse::class, 'question_id');

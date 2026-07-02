@@ -31,6 +31,11 @@ class UserDocument extends Model
         'uploaded_at',
     ];
 
+    /**
+     * Преобразование атрибутов документа пользователя в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -40,6 +45,11 @@ class UserDocument extends Model
         ];
     }
 
+    /**
+     * Пользователь, которому принадлежит документ.
+     *
+     * Нужен для отображения учредительных документов в карточке участника и проверки срока действия.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

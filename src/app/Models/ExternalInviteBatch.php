@@ -27,6 +27,11 @@ class ExternalInviteBatch extends Model
         'sent_at',
     ];
 
+    /**
+     * Преобразование атрибутов массового приглашения в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -36,11 +41,21 @@ class ExternalInviteBatch extends Model
         ];
     }
 
+    /**
+     * Процедура, на которую приглашаются незарегистрированные участники.
+     *
+     * Нужен для отображения истории рассылок приглашений в карточке процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Администратор, инициировавший массовую рассылку приглашений.
+     *
+     * Используется для аудита рассылок и отображения ответственного лица.
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

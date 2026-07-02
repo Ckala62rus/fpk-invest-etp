@@ -31,6 +31,11 @@ class ProcedureDocument extends Model
         'uploaded_by',
     ];
 
+    /**
+     * Преобразование атрибутов документа процедуры в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,11 +43,21 @@ class ProcedureDocument extends Model
         ];
     }
 
+    /**
+     * Процедура, к которой относится конкурсная документация.
+     *
+     * Нужен для скачивания документации участниками и управления версиями в карточке процедуры.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Администратор, загрузивший файл документации.
+     *
+     * Используется для аудита загрузок и отображения автора версии документа.
+     */
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');

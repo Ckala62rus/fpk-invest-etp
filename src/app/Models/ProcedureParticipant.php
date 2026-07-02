@@ -30,6 +30,11 @@ class ProcedureParticipant extends Model
         'rejection_reason',
     ];
 
+    /**
+     * Преобразование атрибутов участника процедуры в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,16 +43,31 @@ class ProcedureParticipant extends Model
         ];
     }
 
+    /**
+     * Процедура, в которой участвует пользователь.
+     *
+     * Нужен для отображения списка участников процедуры и проверки допуска к торгам.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Участник процедуры (зарегистрированный пользователь).
+     *
+     * Используется для отображения данных участника и связи с его заявками и ставками.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Администратор, допустивший участника к процедуре.
+     *
+     * Нужен для аудита решений о допуске и отображения ответственного лица.
+     */
     public function admittedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admitted_by');

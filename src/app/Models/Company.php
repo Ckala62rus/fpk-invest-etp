@@ -32,6 +32,11 @@ class Company extends Model
         'is_active',
     ];
 
+    /**
+     * Преобразование атрибутов предприятия-заказчика в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -40,11 +45,21 @@ class Company extends Model
         ];
     }
 
+    /**
+     * Группа компаний холдинга, в которую входит предприятие.
+     *
+     * Нужен для классификации заказчиков и фильтрации процедур по структуре холдинга.
+     */
     public function companyGroup(): BelongsTo
     {
         return $this->belongsTo(CompanyGroup::class);
     }
 
+    /**
+     * Все торговые процедуры, проводимые этим предприятием-заказчиком.
+     *
+     * Используется для отображения процедур заказчика в админке и отчётов по предприятию.
+     */
     public function procedures(): HasMany
     {
         return $this->hasMany(Procedure::class);

@@ -26,6 +26,11 @@ class CorruptionReport extends Model
         'message',
     ];
 
+    /**
+     * Пользователь, подавший сообщение о коррупции (если был авторизован).
+     *
+     * Нужен для связи обращения с учётной записью и обработки сообщений администратором.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

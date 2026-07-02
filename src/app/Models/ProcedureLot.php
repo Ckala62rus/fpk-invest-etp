@@ -36,6 +36,11 @@ class ProcedureLot extends Model
         'winner_user_id',
     ];
 
+    /**
+     * Преобразование атрибутов лота в типы PHP (цены, количество).
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -47,16 +52,31 @@ class ProcedureLot extends Model
         ];
     }
 
+    /**
+     * Торгово-закупочная процедура-аукцион, к которой относится этот лот.
+     *
+     * Нужен для навигации от ставки к карточке аукциона и проверки статуса торгов.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);
     }
 
+    /**
+     * Участник-победитель по данному лоту после завершения аукциона.
+     *
+     * Заполняется при определении итогов; отображается в протоколе и профиле победителя.
+     */
     public function winner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'winner_user_id');
     }
 
+    /**
+     * Все ставки участников по этому лоту (включая отменённые администратором).
+     *
+     * Используется для расчёта текущей цены, валидации шага ставки и формирования протокола.
+     */
     public function bids(): HasMany
     {
         return $this->hasMany(AuctionBid::class, 'lot_id');

@@ -26,6 +26,11 @@ class ProposalMessage extends Model
         'attachments',
     ];
 
+    /**
+     * Преобразование атрибутов сообщения в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -34,11 +39,21 @@ class ProposalMessage extends Model
         ];
     }
 
+    /**
+     * Заявка, по которой ведётся переписка об уточнении КП.
+     *
+     * Нужен для отображения истории сообщений в карточке заявки.
+     */
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);
     }
 
+    /**
+     * Отправитель сообщения (администратор или участник).
+     *
+     * Используется для отображения автора сообщения и разграничения сторон переписки.
+     */
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');

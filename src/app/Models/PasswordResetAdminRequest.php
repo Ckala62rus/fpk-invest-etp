@@ -28,6 +28,11 @@ class PasswordResetAdminRequest extends Model
         'resolved_by',
     ];
 
+    /**
+     * Преобразование атрибутов запроса восстановления в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -35,11 +40,21 @@ class PasswordResetAdminRequest extends Model
         ];
     }
 
+    /**
+     * Пользователь, для которого создан запрос восстановления доступа.
+     *
+     * Нужен для связи обращения с учётной записью при обработке запроса главным администратором.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Администратор, обработавший запрос восстановления доступа.
+     *
+     * Используется для аудита обработки обращений и отображения ответственного лица.
+     */
     public function resolvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');

@@ -34,6 +34,11 @@ class ActivityLog extends Model
         'properties',
     ];
 
+    /**
+     * Преобразование атрибутов записи аудита в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -41,11 +46,21 @@ class ActivityLog extends Model
         ];
     }
 
+    /**
+     * Объект, над которым было выполнено действие (процедура, заявка, пользователь и т.д.).
+     *
+     * Нужен для навигации из журнала аудита к сущности и отображения контекста действия.
+     */
     public function subject(): MorphTo
     {
         return $this->morphTo();
     }
 
+    /**
+     * Пользователь или системный актор, инициировавший действие.
+     *
+     * Используется для отображения автора действия в журнале аудита и фильтрации по инициатору.
+     */
     public function causer(): MorphTo
     {
         return $this->morphTo();

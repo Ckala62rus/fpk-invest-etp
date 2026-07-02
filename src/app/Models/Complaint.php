@@ -31,6 +31,11 @@ class Complaint extends Model
         'status',
     ];
 
+    /**
+     * Преобразование атрибутов жалобы в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,6 +43,11 @@ class Complaint extends Model
         ];
     }
 
+    /**
+     * Пользователь, подавший жалобу (если был авторизован).
+     *
+     * Нужен для связи обращения с учётной записью и отображения истории жалоб в личном кабинете.
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

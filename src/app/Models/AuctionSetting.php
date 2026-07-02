@@ -38,6 +38,11 @@ class AuctionSetting extends Model
         'only_admitted_from_rfp',
     ];
 
+    /**
+     * Преобразование атрибутов настроек аукциона в типы PHP и enum.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -52,6 +57,11 @@ class AuctionSetting extends Model
         ];
     }
 
+    /**
+     * Процедура-аукцион, к которой относятся эти настройки.
+     *
+     * Нужен для применения правил торгов (продление, режим ставок, определение победителя) при проведении аукциона.
+     */
     public function procedure(): BelongsTo
     {
         return $this->belongsTo(Procedure::class);

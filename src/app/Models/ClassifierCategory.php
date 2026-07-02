@@ -30,6 +30,11 @@ class ClassifierCategory extends Model
         'is_active',
     ];
 
+    /**
+     * Преобразование атрибутов категории классификатора в типы PHP.
+     *
+     * @return array<string, string>
+     */
     protected function casts(): array
     {
         return [
@@ -38,11 +43,21 @@ class ClassifierCategory extends Model
         ];
     }
 
+    /**
+     * Группа компаний холдинга, к которой относится категория.
+     *
+     * Нужен для построения двухуровневого классификатора и фильтрации процедур по холдингу.
+     */
     public function companyGroup(): BelongsTo
     {
         return $this->belongsTo(CompanyGroup::class);
     }
 
+    /**
+     * Участники, подписанные на оповещения по этой категории закупок.
+     *
+     * Используется для рассылки уведомлений о новых ТЗП в выбранных категориях (СМР, ПИР, ИТ и т.д.).
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'user_category_subscriptions');
