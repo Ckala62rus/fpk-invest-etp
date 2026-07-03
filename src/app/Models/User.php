@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * Пользователь ЭТП.
@@ -28,6 +30,7 @@ use Illuminate\Notifications\Notifiable;
  * @property \Illuminate\Support\Carbon|null $email_verified_at Подтверждение email
  * @property \Illuminate\Support\Carbon|null $approved_at Дата активации администратором
  * @property int|null $approved_by Кто одобрил регистрацию
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Role> $roles Роли RBAC (Spatie HasRoles)
  */
 #[Fillable([
     'inn',
@@ -45,7 +48,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * Преобразование атрибутов учётной записи в типы PHP и enum.
@@ -95,17 +98,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Роли RBAC, назначенные пользователю (super_admin, trade_admin, auditor, participant, guest).
-     *
-     * Определяет доступ к разделам админки, API и видимость данных на площадке.
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'user_role');
-    }
-
-    /**
-     * Администратор, который одобрил регистрацию этого пользователя.
+     * Учредительные и регистрационные документы пользователя.
      *
      * Нужен для аудита: кто активировал учётную запись участника.
      */

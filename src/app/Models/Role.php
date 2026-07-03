@@ -2,27 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Permission\Models\Role as SpatieRole;
 
 /**
  * Роль пользователя ЭТП.
  *
+ * Расширяет Spatie Role. Связи `users()` и `permissions()` предоставляются пакетом:
+ * users — участники с этой ролью (model_has_roles);
+ * permissions — права, входящие в роль (role_has_permissions).
+ *
  * @property int $id Идентификатор
  * @property string $name Системное имя роли
+ * @property string $guard_name Guard аутентификации (web)
  * @property string $display_name Отображаемое название роли
  * @property bool $is_system Системная роль (нельзя удалить)
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
-class Role extends Model
+class Role extends SpatieRole
 {
-    protected $fillable = [
-        'name',
-        'display_name',
-        'is_system',
-    ];
-
     /**
      * Преобразование атрибутов роли в типы PHP.
      *
@@ -33,25 +31,5 @@ class Role extends Model
         return [
             'is_system' => 'boolean',
         ];
-    }
-
-    /**
-     * Пользователи, которым назначена эта роль.
-     *
-     * Нужен для управления составом ролей и проверки прав доступа в RBAC.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'user_role');
-    }
-
-    /**
-     * Права доступа, входящие в эту роль.
-     *
-     * Используется для настройки матрицы разрешений и авторизации действий пользователя.
-     */
-    public function permissions(): BelongsToMany
-    {
-        return $this->belongsToMany(Permission::class, 'role_permission');
     }
 }
