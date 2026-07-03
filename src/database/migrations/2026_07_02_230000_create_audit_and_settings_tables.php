@@ -13,9 +13,11 @@ return new class extends Migration
             $table->id()->comment('Идентификатор записи аудита');
             $table->string('log_name', 100)->nullable()->comment('Канал лога');
             $table->text('description')->comment('Описание действия');
+            $table->string('event')->nullable()->comment('Тип события: created, updated, deleted');
             $table->nullableMorphs('subject', 'activity_log_subject_index');
             $table->nullableMorphs('causer', 'activity_log_causer_index');
             $table->jsonb('properties')->nullable()->comment('Дополнительные данные действия');
+            $table->uuid('batch_uuid')->nullable()->comment('UUID пакета связанных записей аудита');
             $table->timestamp('created_at')->nullable()->comment('Дата и время действия');
         });
 
