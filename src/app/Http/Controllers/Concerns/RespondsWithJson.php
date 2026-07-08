@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 trait RespondsWithJson
@@ -46,11 +47,11 @@ trait RespondsWithJson
     /**
      * Успешный ответ без содержимого (204).
      *
-     * @return JsonResponse
+     * @return Response
      */
-    protected function noContent(): JsonResponse
+    protected function noContent(): Response
     {
-        return response()->json(null, 204);
+        return response()->noContent();
     }
 
     /**
