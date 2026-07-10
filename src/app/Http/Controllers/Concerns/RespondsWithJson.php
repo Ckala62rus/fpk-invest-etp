@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Support\Api\ApiJsonResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -67,13 +68,7 @@ trait RespondsWithJson
         int $status = 400,
         array $errors = []
     ): JsonResponse {
-        $payload = [
-            'success' => false,
-            'message' => $message,
-            'errors' => $errors,
-        ];
-
-        return response()->json($payload, $status);
+        return ApiJsonResponse::error($message, $status, $errors);
     }
 
     /**
