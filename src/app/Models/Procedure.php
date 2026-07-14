@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Торгово-закупочная процедура (КП или аукцион).
@@ -43,6 +45,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Procedure extends Model
 {
+    use LogsActivity;
     use SoftDeletes;
 
     protected $fillable = [
@@ -88,6 +91,20 @@ class Procedure extends Model
             'results_published' => 'boolean',
             'storage_years' => 'integer',
         ];
+    }
+
+    /**
+     * Настройки аудита изменений процедуры (только изменившиеся поля).
+     *
+     * @return LogOptions
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('procedure')
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     /**

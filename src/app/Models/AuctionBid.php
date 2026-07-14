@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * Ставка участника на аукционе.
@@ -22,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AuctionBid extends Model
 {
+    use LogsActivity;
+
     public const UPDATED_AT = null;
 
     protected $fillable = [
@@ -49,6 +53,20 @@ class AuctionBid extends Model
             'cancelled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Настройки аудита ставок (создание и отмена; ставки не удаляются).
+     *
+     * @return LogOptions
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('auction_bid')
+            ->logAll()
+            ->logOnlyDirty() // Логируем только изменения
+            ->dontSubmitEmptyLogs(); // Не создаем лог, если ничего не изменилось
     }
 
     /**
