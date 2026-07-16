@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\ProposalStatus;
+use Database\Factories\ProposalFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -24,6 +26,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Proposal extends Model
 {
+    /** @use HasFactory<ProposalFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'procedure_id',
         'user_id',

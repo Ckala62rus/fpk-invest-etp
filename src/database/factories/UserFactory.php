@@ -9,17 +9,21 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+ * Фабрика пользователей ЭТП (электронной торговой площадки).
+ *
  * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * Текущий пароль, переиспользуемый между вызовами factory.
+     *
+     * @var string|null
      */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Активный пользователь с подтверждённым email (happy path для тестов).
      *
      * @return array<string, mixed>
      */
@@ -33,11 +37,60 @@ class UserFactory extends Factory
             'approved_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'failed_login_attempts' => 0,
+            'blocked_until' => null,
+            'block_reason' => null,
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Email ещё не подтверждён (статус pending_email).
+     *
+     * @return static
+     */
+    public function pendingEmail(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => UserStatus::PendingEmail,
+            'email_verified_at' => null,
+            'approved_at' => null,
+            'approved_by' => null,
+        ]);
+    }
+
+    /**
+     * Email подтверждён, ожидает одобрения администратором.
+     *
+     * @return static
+     */
+    public function pendingApproval(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => UserStatus::PendingApproval,
+            'email_verified_at' => now(),
+            'approved_at' => null,
+            'approved_by' => null,
+        ]);
+    }
+
+    /**
+     * Пользователь заблокирован.
+     *
+     * @return static
+     */
+    public function blocked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => UserStatus::Blocked,
+            'blocked_until' => now()->addDays(7),
+            'block_reason' => 'Нарушение регламента участия',
+        ]);
+    }
+
+    /**
+     * Email не подтверждён (статус может остаться active — для точечных кейсов).
+     *
+     * @return static
      */
     public function unverified(): static
     {

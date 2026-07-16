@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\AuctionBidFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
@@ -24,6 +26,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class AuctionBid extends Model
 {
+    /** @use HasFactory<AuctionBidFactory> */
+    use HasFactory;
     use LogsActivity;
 
     public const UPDATED_AT = null;

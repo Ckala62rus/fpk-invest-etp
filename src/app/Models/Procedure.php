@@ -6,6 +6,8 @@ use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureType;
 use App\Enums\ProcedureVisibility;
 use App\Enums\TradeDirection;
+use Database\Factories\ProcedureFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +47,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class Procedure extends Model
 {
+    /** @use HasFactory<ProcedureFactory> */
+    use HasFactory;
     use LogsActivity;
     use SoftDeletes;
 
