@@ -37,7 +37,7 @@ class ApiExceptionHandlerTest extends TestCase
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
         $response->assertExactJson([
             'success' => false,
-            'message' => 'Unauthorized',
+            'message' => 'Unauthenticated',
             'errors' => [],
         ]);
     }

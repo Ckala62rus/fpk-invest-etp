@@ -42,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->renderable(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error('Unauthorized', 401);
+                return ApiJsonResponse::error($e->getMessage() ?: 'Unauthorized', 401);
             }
         });
 
