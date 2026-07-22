@@ -6,7 +6,10 @@ use App\Models\Role;
 use Illuminate\Database\Seeder;
 
 /**
- * Начальные роли RBAC ЭТП (идемпотентный seeder).
+ * Начальные роли и права RBAC (role-based access control) ЭТП (электронной торговой площадки).
+ *
+ * Идемпотентный seeder: сначала роли, затем PermissionsSeeder.
+ * Тестового супер-админа сюда не создаём — для этого есть SuperAdminSeeder.
  */
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -24,12 +27,14 @@ class RolesAndPermissionsSeeder extends Seeder
     ];
 
     /**
-     * Создаёт роли, если они ещё не существуют.
+     * Создаёт системные роли и вызывает seeder прав.
+     *
+     * @return void
      */
     public function run(): void
     {
         foreach (self::ROLES as $name => $displayName) {
-            Role::firstOrCreate(
+            Role::query()->firstOrCreate(
                 [
                     'name' => $name,
                     'guard_name' => 'web',
@@ -40,5 +45,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 ],
             );
         }
+
+        $this->call(PermissionsSeeder::class);
     }
 }
