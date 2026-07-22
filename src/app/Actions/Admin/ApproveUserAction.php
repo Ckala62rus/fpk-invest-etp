@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\DTOs\ApproveUserDTO;
 use App\Enums\UserStatus;
 use App\Models\User;
 
@@ -13,18 +14,17 @@ class ApproveUserAction
     /**
      * Активирует пользователя после проверки администратором.
      *
-     * @param User $user Пользователь, ожидающий одобрения
-     * @param User $approvedBy Администратор, выполнивший одобрение
+     * @param ApproveUserDTO $dto Пользователь и администратор, выполнивший одобрение
      * @return User Активированная учётная запись
      */
-    public function execute(User $user, User $approvedBy): User
+    public function execute(ApproveUserDTO $dto): User
     {
-        $user->update([
+        $dto->user->update([
             'approved_at' => now(),
-            'approved_by' => $approvedBy->id,
+            'approved_by' => $dto->approvedBy->id,
             'status' => UserStatus::Active,
         ]);
 
-        return $user->refresh();
+        return $dto->user->refresh();
     }
 }

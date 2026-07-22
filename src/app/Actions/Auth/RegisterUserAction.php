@@ -2,6 +2,7 @@
 
 namespace App\Actions\Auth;
 
+use App\DTOs\RegisterUserDTO;
 use App\Enums\UserStatus;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
@@ -21,35 +22,40 @@ class RegisterUserAction
     /**
      * Регистрирует пользователя и отправляет ссылку подтверждения email.
      *
-     * @param array<string, mixed> $data Проверенные данные формы регистрации
+     * @param RegisterUserDTO $dto Проверенные данные формы регистрации
      * @return User Созданная учётная запись со связанным профилем
      */
-    public function execute(array $data): User
+    public function execute(RegisterUserDTO $dto): User
     {
         /** @var User $user */
-        $user = DB::transaction(function () use ($data): User {
+        $user = DB::transaction(function () use ($dto): User {
             $user = User::query()->create([
-                'inn' => $data['inn'],
-                'email' => $data['email'],
-                'password' => $data['password'],
+                'inn' => $dto->inn,
+                'email' => $dto->email,
+                'password' => $dto->password,
                 'status' => UserStatus::PendingEmail,
             ]);
 
             UserProfile::query()->create([
                 'user_id' => $user->id,
-                'entity_type' => $data['entity_type'],
-                'name' => $data['name'],
-                'phone' => $data['phone'],
-                'director_name' => $data['director_name'],
-                'director_birth_date' => $data['director_birth_date'] ?? null,
-                'contact_persons' => $data['contact_persons'],
+                'entity_type' => $dto->entityType,
+                'name' => $dto->name,
+                'phone' => $dto->phone,
+                'director_name' => $dto->directorName,
+                'director_birth_date' => $dto->directorBirthDate,
+                'contact_persons' => $dto->contactPersons,
+                // pd_consent уже принят в FormRequest; фиксируем момент согласия
                 'pd_consent_at' => now(),
             ]);
 
-            foreach ($data['extra_emails'] ?? [] as $email) {
-                UserEmail::query()->create(['user_id' => $user->id, 'email' => $email]);
+            foreach ($dto->extraEmails as $email) {
+                UserEmail::query()->create([
+                    'user_id' => $user->id,
+                    'email' => $email,
+                ]);
             }
 
+            // Настройки оповещений по умолчанию при регистрации (ТЗ §3.1)
             UserNotificationSetting::query()->create([
                 'user_id' => $user->id,
                 'all_disabled' => false,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\ApproveUserAction;
+use App\DTOs\ApproveUserDTO;
 use App\Http\Controllers\ApiController;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -47,7 +48,9 @@ class UserApprovalController extends ApiController
             throw new AccessDeniedHttpException('Недостаточно прав для одобрения пользователя.');
         }
 
-        $user = $this->approveUser->execute($user, $administrator);
+        $user = $this->approveUser->execute(
+            ApproveUserDTO::fromUsers($user, $administrator),
+        );
 
         return $this->success(
             ['user_id' => $user->id, 'status' => $user->status->value],

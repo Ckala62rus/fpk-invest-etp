@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\RegisterUserAction;
+use App\DTOs\RegisterUserDTO;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Api\RegistrationRequest;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +39,9 @@ class RegisterController extends ApiController
      */
     public function store(RegistrationRequest $request): JsonResponse
     {
-        $user = $this->registerUser->execute($request->validated());
+        $user = $this->registerUser->execute(
+            RegisterUserDTO::fromArray($request->validated()),
+        );
 
         return $this->created(
             ['user_id' => $user->id, 'status' => $user->status->value],
