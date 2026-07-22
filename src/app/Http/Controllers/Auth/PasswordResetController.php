@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Api\ForgotPasswordRequest;
+use App\Http\Requests\Api\ResetPasswordRequest;
 use App\Mail\PasswordResetMail;
 use App\Models\PasswordResetToken;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -20,12 +21,12 @@ class PasswordResetController extends ApiController
     /**
      * Выпускает токен восстановления и отправляет его владельцу email.
      *
-     * @param Request $request HTTP-запрос с email пользователя
+     * @param ForgotPasswordRequest $request Проверенный запрос с email
      * @return JsonResponse Единый JSON-ответ без раскрытия существования email
      */
-    public function forgot(Request $request): JsonResponse
+    public function forgot(ForgotPasswordRequest $request): JsonResponse
     {
-        $data = $request->validate(['email' => ['required', 'email']]);
+        $data = $request->validated();
         $user = User::query()->where('email', $data['email'])->first();
 
         if ($user !== null) {
@@ -52,15 +53,12 @@ class PasswordResetController extends ApiController
     /**
      * Сбрасывает пароль по действующему одноразовому токену.
      *
-     * @param Request $request HTTP-запрос с токеном и новым паролем
+     * @param ResetPasswordRequest $request Проверенный запрос с токеном и новым паролем
      * @return JsonResponse Единый JSON-ответ о смене пароля
      */
-    public function reset(Request $request): JsonResponse
+    public function reset(ResetPasswordRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'token' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        $data = $request->validated();
 
         $token = PasswordResetToken::query()
             ->where('token', $data['token'])

@@ -6,12 +6,12 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Запрос входа участника ЭТП (электронной торговой площадки) по ИНН и паролю.
+ * Запрос смены пароля по одноразовому токену восстановления.
  */
-class LoginRequest extends FormRequest
+class ResetPasswordRequest extends FormRequest
 {
     /**
-     * Вход доступен без предварительной авторизации.
+     * Запрос доступен без авторизации.
      *
      * @return bool
      */
@@ -21,15 +21,13 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Правила проверки учётных данных входа.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'inn' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'token' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 
@@ -41,10 +39,12 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'inn.required' => 'Поле ИНН обязательно для заполнения.',
-            'inn.string' => 'ИНН должен быть строкой.',
+            'token.required' => 'Токен восстановления обязателен.',
+            'token.string' => 'Токен восстановления должен быть строкой.',
             'password.required' => 'Поле пароля обязательно для заполнения.',
             'password.string' => 'Пароль должен быть строкой.',
+            'password.min' => 'Пароль должен содержать минимум :min символов.',
+            'password.confirmed' => 'Подтверждение пароля не совпадает.',
         ];
     }
 }

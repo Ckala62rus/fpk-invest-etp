@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Api\StoreUserDocumentRequest;
 use App\Models\UserDocument;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * Контроллер загрузки собственных документов пользователя ЭТП (электронной торговой площадки).
@@ -14,15 +14,12 @@ class UserDocumentController extends ApiController
     /**
      * Сохраняет документ текущего пользователя на локальном закрытом диске.
      *
-     * @param Request $request Аутентифицированный HTTP-запрос с файлом документа
+     * @param StoreUserDocumentRequest $request Проверенный запрос с файлом документа
      * @return JsonResponse Единый JSON-ответ с метаданными документа
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreUserDocumentRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'document' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:10240'],
-        ]);
-        $file = $data['document'];
+        $file = $request->file('document');
         $user = $request->user();
         $path = $file->store("user_documents/{$user->id}", 'local');
 

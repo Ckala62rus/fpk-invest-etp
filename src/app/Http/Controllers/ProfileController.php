@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Api\UpdateProfileRequest;
 use App\Http\Resources\UserProfileResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,22 +26,13 @@ class ProfileController extends ApiController
     /**
      * Обновляет только профиль текущего пользователя.
      *
-     * @param Request $request Аутентифицированный HTTP-запрос с данными профиля
+     * @param UpdateProfileRequest $request Проверенный запрос с данными профиля
      * @return JsonResponse Единый JSON-ответ с обновлённым профилем
      */
-    public function update(Request $request): JsonResponse
+    public function update(UpdateProfileRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'entity_type' => ['sometimes', 'in:legal,individual'],
-            'name' => ['sometimes', 'string', 'max:500'],
-            'phone' => ['sometimes', 'string', 'max:20'],
-            'director_name' => ['sometimes', 'string', 'max:255'],
-            'director_birth_date' => ['nullable', 'date'],
-            'contact_persons' => ['sometimes', 'string'],
-        ]);
-
         $profile = $request->user()->profile;
-        $profile->update($data);
+        $profile->update($request->validated());
 
         return $this->success(new UserProfileResource($profile->refresh()), 'Профиль обновлён.');
     }
