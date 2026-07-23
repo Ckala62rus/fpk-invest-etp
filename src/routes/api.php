@@ -47,7 +47,8 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store']);
+    Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin');
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/documents', [UserDocumentController::class, 'store']);

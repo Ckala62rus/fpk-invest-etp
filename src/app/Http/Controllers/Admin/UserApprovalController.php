@@ -8,10 +8,11 @@ use App\Http\Controllers\ApiController;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Контроллер одобрения зарегистрированных пользователей администрацией ЭТП.
+ *
+ * Доступ к маршруту ограничен middleware `role:super_admin|trade_admin`.
  */
 class UserApprovalController extends ApiController
 {
@@ -42,14 +43,8 @@ class UserApprovalController extends ApiController
      */
     public function store(Request $request, User $user): JsonResponse
     {
-        $administrator = $request->user();
-
-        if (!$administrator->hasAnyRole(['super_admin', 'trade_admin'])) {
-            throw new AccessDeniedHttpException('Недостаточно прав для одобрения пользователя.');
-        }
-
         $user = $this->approveUser->execute(
-            ApproveUserDTO::fromUsers($user, $administrator),
+            ApproveUserDTO::fromUsers($user, $request->user()),
         );
 
         return $this->success(
