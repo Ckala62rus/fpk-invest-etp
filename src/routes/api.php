@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin|auditor');
     Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store'])
         ->middleware('role:super_admin|trade_admin');
+    Route::post('/admin/users/{user}/block', [UserController::class, 'block'])
+        ->middleware('role:super_admin|trade_admin');
+    Route::post('/admin/users/{user}/unblock', [UserController::class, 'unblock'])
+        ->middleware('role:super_admin|trade_admin');
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/documents', [UserDocumentController::class, 'store']);
