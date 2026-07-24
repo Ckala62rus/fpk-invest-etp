@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\AssignRolesAction;
 use App\Actions\Admin\BlockUserAction;
 use App\Actions\Admin\UnblockUserAction;
 use App\Contracts\UserRepositoryInterface;
+use App\DTOs\AssignRolesDTO;
 use App\DTOs\BlockUserDTO;
 use App\DTOs\UserFilterDTO;
 use App\Http\Controllers\ApiController;
+use App\Http\Requests\Api\Admin\AssignRolesRequest;
 use App\Http\Requests\Api\Admin\BlockUserRequest;
 use App\Http\Requests\Api\Admin\ListUsersRequest;
 use App\Http\Resources\UserResource;
@@ -18,7 +21,7 @@ use Illuminate\Http\Request;
 /**
  * Админское управление пользователями ЭТП (электронной торговой площадки).
  *
- * Фаза 2.3–2.4: список, блокировка и разблокировка.
+ * Фаза 2.3–2.5: список, блокировка/разблокировка, назначение ролей.
  */
 class UserController extends ApiController
 {
@@ -44,21 +47,31 @@ class UserController extends ApiController
     private readonly UnblockUserAction $unblockUser;
 
     /**
+     * Действие назначения ролей.
+     *
+     * @var AssignRolesAction
+     */
+    private readonly AssignRolesAction $assignRoles;
+
+    /**
      * Создаёт контроллер управления пользователями.
      *
      * @param UserRepositoryInterface $users Репозиторий фильтрованного списка
      * @param BlockUserAction $blockUser Действие блокировки
      * @param UnblockUserAction $unblockUser Действие разблокировки
+     * @param AssignRolesAction $assignRoles Действие назначения ролей
      * @return void
      */
     public function __construct(
         UserRepositoryInterface $users,
         BlockUserAction $blockUser,
         UnblockUserAction $unblockUser,
+        AssignRolesAction $assignRoles,
     ) {
         $this->users = $users;
         $this->blockUser = $blockUser;
         $this->unblockUser = $unblockUser;
+        $this->assignRoles = $assignRoles;
     }
 
     /**
@@ -119,6 +132,27 @@ class UserController extends ApiController
         return $this->success(
             new UserResource($unblocked),
             'Пользователь разблокирован.',
+        );
+    }
+
+    /**
+     * Назначает (синхронизирует) роли пользователю.
+     *
+     * Доступ: middleware `role:super_admin` (право users.assign_roles).
+     *
+     * @param AssignRolesRequest $request Список ролей для syncRoles
+     * @param User $user Цель назначения
+     * @return JsonResponse JSON с пользователем и актуальными ролями
+     */
+    public function assignRoles(AssignRolesRequest $request, User $user): JsonResponse
+    {
+        $updated = $this->assignRoles->execute(
+            AssignRolesDTO::fromRequest($user, $request->user(), $request),
+        );
+
+        return $this->success(
+            new UserResource($updated),
+            'Роли пользователя обновлены.',
         );
     }
 }
