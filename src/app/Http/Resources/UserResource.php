@@ -27,6 +27,9 @@ class UserResource extends JsonResource
             'status' => $this->status->value,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'approved_at' => $this->approved_at?->toIso8601String(),
+            'blocked_until' => $this->blocked_until?->toIso8601String(),
+            'block_reason' => $this->block_reason,
+            'deleted_at' => $this->deleted_at?->toIso8601String(),
             'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()->values()),
             'profile' => new UserProfileResource($this->whenLoaded('profile')),
         ];

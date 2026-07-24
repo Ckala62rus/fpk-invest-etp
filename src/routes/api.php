@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserApprovalController;
-use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetAdminRequestController;
@@ -47,6 +47,8 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('/admin/users', [UserController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor');
     Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store'])
         ->middleware('role:super_admin|trade_admin');
     Route::get('/profile', [ProfileController::class, 'show']);
