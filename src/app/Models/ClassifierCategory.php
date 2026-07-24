@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *
  * @property int $id Идентификатор
  * @property int $company_group_id Группа компаний
- * @property string $name Категория: СМР, ПИР, ИТ и т.д.
+ * @property string $name Категория: СМР (строительно-монтажные работы), ПИР (проектно-изыскательские работы), ИТ (информационные технологии) и т.д.
  * @property int $sort_order Порядок сортировки
  * @property bool $is_active Активна ли категория
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -60,7 +60,9 @@ class ClassifierCategory extends Model
     /**
      * Участники, подписанные на оповещения по этой категории закупок.
      *
-     * Используется для рассылки уведомлений о новых ТЗП в выбранных категориях (СМР, ПИР, ИТ и т.д.).
+     * Используется для рассылки уведомлений о новых ТЗП (торгово-закупочных процедурах)
+     * в выбранных категориях: СМР (строительно-монтажные работы), ПИР (проектно-изыскательские работы),
+     * ИТ (информационные технологии) и т.д.
      */
     public function users(): BelongsToMany
     {

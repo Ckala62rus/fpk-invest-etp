@@ -22,7 +22,13 @@ class ClassifierCategoryFactory extends Factory
     {
         return [
             'company_group_id' => CompanyGroup::factory(),
-            'name' => fake()->randomElement(['СМР', 'ПИР', 'ИТ', 'Оборудование', 'Услуги']),
+            'name' => fake()->randomElement([
+                'СМР (строительно-монтажные работы)',
+                'ПИР (проектно-изыскательские работы)',
+                'ИТ (информационные технологии)',
+                'Оборудование',
+                'Услуги',
+            ]),
             'sort_order' => fake()->numberBetween(0, 100),
             'is_active' => true,
         ];

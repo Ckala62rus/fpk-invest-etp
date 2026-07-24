@@ -21,7 +21,7 @@ return new class extends Migration
         Schema::create('classifier_categories', function (Blueprint $table) {
             $table->id()->comment('Идентификатор категории закупки');
             $table->foreignId('company_group_id')->constrained()->cascadeOnDelete()->comment('Группа компаний');
-            $table->string('name')->comment('Категория: СМР, ПИР, ИТ и т.д.');
+            $table->string('name')->comment('Категория: СМР (строительно-монтажные работы), ПИР (проектно-изыскательские работы), ИТ (информационные технологии) и т.д.');
             $table->unsignedInteger('sort_order')->default(0)->comment('Порядок сортировки');
             $table->boolean('is_active')->default(true)->comment('Активна ли категория');
             $table->timestamps();
