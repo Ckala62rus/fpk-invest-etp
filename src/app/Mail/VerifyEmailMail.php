@@ -53,10 +53,11 @@ class VerifyEmailMail extends Mailable
      */
     public function content(): Content
     {
+        // Параметр маршрута — {user}, не {id} (иначе ссылка из письма невалидна)
         $url = URL::temporarySignedRoute(
             'auth.email.verify',
             now()->addMinutes(60),
-            ['id' => $this->user->id, 'hash' => sha1($this->user->email)],
+            ['user' => $this->user->id, 'hash' => sha1($this->user->email)],
         );
 
         return new Content(htmlString: sprintf(
