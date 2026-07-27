@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -57,6 +58,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin');
     Route::put('/admin/users/{user}/roles', [UserController::class, 'assignRoles'])
         ->middleware('role:super_admin');
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor');
+    Route::get('/admin/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('activityLog');
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/documents', [UserDocumentController::class, 'store']);
