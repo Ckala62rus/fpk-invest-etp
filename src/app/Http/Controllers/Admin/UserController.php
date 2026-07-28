@@ -14,6 +14,7 @@ use App\Http\Requests\Api\Admin\AssignRolesRequest;
 use App\Http\Requests\Api\Admin\BlockUserRequest;
 use App\Http\Requests\Api\Admin\ListUsersRequest;
 use App\Http\Resources\UserResource;
+use App\Exceptions\DomainException;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -103,6 +104,8 @@ class UserController extends ApiController
      * @param BlockUserRequest $request Причина и опциональный blocked_until
      * @param User $user Цель блокировки
      * @return JsonResponse JSON с обновлённым пользователем
+     *
+     * @throws DomainException Если нельзя заблокировать (себя, уже заблокирован и т.п.)
      */
     public function block(BlockUserRequest $request, User $user): JsonResponse
     {
@@ -124,6 +127,8 @@ class UserController extends ApiController
      * @param Request $request Аутентифицированный запрос администратора
      * @param User $user Заблокированный пользователь
      * @return JsonResponse JSON с обновлённым пользователем
+     *
+     * @throws DomainException Если пользователь не заблокирован
      */
     public function unblock(Request $request, User $user): JsonResponse
     {
@@ -143,6 +148,8 @@ class UserController extends ApiController
      * @param AssignRolesRequest $request Список ролей для syncRoles
      * @param User $user Цель назначения
      * @return JsonResponse JSON с пользователем и актуальными ролями
+     *
+     * @throws DomainException Если нельзя менять роли (например, свои)
      */
     public function assignRoles(AssignRolesRequest $request, User $user): JsonResponse
     {

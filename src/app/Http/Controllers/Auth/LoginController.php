@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Contracts\AuthServiceInterface;
 use App\DTOs\LoginDTO;
+use App\Exceptions\DomainException;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Api\LoginRequest;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -38,6 +40,9 @@ class LoginController extends ApiController
      *
      * @param LoginRequest $request Проверенный HTTP-запрос входа
      * @return JsonResponse Единый JSON-ответ с идентификатором пользователя
+     *
+     * @throws AuthenticationException Если ИНН или пароль неверны
+     * @throws DomainException Если учётная запись не активна (pending/blocked)
      */
     public function store(LoginRequest $request): JsonResponse
     {
