@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\ClassifierCategoryController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\CompanyGroupController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -10,7 +13,9 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserDocumentController;
+use App\Http\Controllers\UserNotificationSettingController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +68,41 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/admin/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('activityLog');
+
+    Route::middleware('role:super_admin')->group(function (): void {
+        Route::get('/admin/company-groups', [CompanyGroupController::class, 'index']);
+        Route::post('/admin/company-groups', [CompanyGroupController::class, 'store']);
+        Route::get('/admin/company-groups/{companyGroup}', [CompanyGroupController::class, 'show'])
+            ->whereNumber('companyGroup');
+        Route::put('/admin/company-groups/{companyGroup}', [CompanyGroupController::class, 'update'])
+            ->whereNumber('companyGroup');
+        Route::delete('/admin/company-groups/{companyGroup}', [CompanyGroupController::class, 'destroy'])
+            ->whereNumber('companyGroup');
+
+        Route::get('/admin/classifier-categories', [ClassifierCategoryController::class, 'index']);
+        Route::post('/admin/classifier-categories', [ClassifierCategoryController::class, 'store']);
+        Route::get('/admin/classifier-categories/{classifierCategory}', [ClassifierCategoryController::class, 'show'])
+            ->whereNumber('classifierCategory');
+        Route::put('/admin/classifier-categories/{classifierCategory}', [ClassifierCategoryController::class, 'update'])
+            ->whereNumber('classifierCategory');
+        Route::delete('/admin/classifier-categories/{classifierCategory}', [ClassifierCategoryController::class, 'destroy'])
+            ->whereNumber('classifierCategory');
+
+        Route::get('/admin/companies', [CompanyController::class, 'index']);
+        Route::post('/admin/companies', [CompanyController::class, 'store']);
+        Route::get('/admin/companies/{company}', [CompanyController::class, 'show'])
+            ->whereNumber('company');
+        Route::put('/admin/companies/{company}', [CompanyController::class, 'update'])
+            ->whereNumber('company');
+        Route::delete('/admin/companies/{company}', [CompanyController::class, 'destroy'])
+            ->whereNumber('company');
+    });
+
+    Route::get('/subscriptions', [SubscriptionController::class, 'show']);
+    Route::put('/subscriptions', [SubscriptionController::class, 'update']);
+    Route::get('/notification-settings', [UserNotificationSettingController::class, 'show']);
+    Route::put('/notification-settings', [UserNotificationSettingController::class, 'update']);
+
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::post('/profile/documents', [UserDocumentController::class, 'store']);
