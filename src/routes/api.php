@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ClassifierCategoryController;
+use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
 use App\Http\Controllers\Admin\UserApprovalController;
@@ -12,7 +13,12 @@ use App\Http\Controllers\Auth\PasswordResetAdminRequestController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicApi\CmsPageController as PublicCmsPageController;
+use App\Http\Controllers\PublicApi\ProcedureController as PublicProcedureController;
+use App\Http\Controllers\ServerTimeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserDocumentController;
 use App\Http\Controllers\UserNotificationSettingController;
@@ -34,6 +40,26 @@ Route::get('/test', function (): JsonResponse {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+/*
+|--------------------------------------------------------------------------
+| Фаза 4 — публичная витрина (без auth)
+|--------------------------------------------------------------------------
+*/
+Route::get('/server-time', ServerTimeController::class);
+
+Route::get('/cms/pages', [PublicCmsPageController::class, 'index']);
+Route::get('/cms/pages/{slug}', [PublicCmsPageController::class, 'show'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
+
+Route::get('/procedures', [PublicProcedureController::class, 'index']);
+Route::get('/procedures/{procedure}', [PublicProcedureController::class, 'show'])
+    ->whereNumber('procedure');
+
+Route::post('/complaints', [ComplaintController::class, 'store'])
+    ->middleware('throttle:5,1');
+Route::post('/corruption-reports', [CorruptionReportController::class, 'store'])
+    ->middleware('throttle:5,1');
 
 Route::prefix('auth')->group(function (): void {
     Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1');
@@ -96,6 +122,16 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->whereNumber('company');
         Route::delete('/admin/companies/{company}', [CompanyController::class, 'destroy'])
             ->whereNumber('company');
+
+        // Фаза 4.1 — CRUD страниц CMS
+        Route::get('/admin/cms-pages', [AdminCmsPageController::class, 'index']);
+        Route::post('/admin/cms-pages', [AdminCmsPageController::class, 'store']);
+        Route::get('/admin/cms-pages/{cmsPage}', [AdminCmsPageController::class, 'show'])
+            ->whereNumber('cmsPage');
+        Route::put('/admin/cms-pages/{cmsPage}', [AdminCmsPageController::class, 'update'])
+            ->whereNumber('cmsPage');
+        Route::delete('/admin/cms-pages/{cmsPage}', [AdminCmsPageController::class, 'destroy'])
+            ->whereNumber('cmsPage');
     });
 
     Route::get('/subscriptions', [SubscriptionController::class, 'show']);
