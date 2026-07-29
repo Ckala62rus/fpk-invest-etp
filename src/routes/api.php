@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
 use App\Http\Controllers\Admin\ProcedureController as AdminProcedureController;
+use App\Http\Controllers\Admin\ProcedureCustomFieldController;
+use App\Http\Controllers\Admin\ProcedureLotController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -107,6 +109,38 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/admin/procedures/{procedure}', [AdminProcedureController::class, 'update'])
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure');
+
+    // Фаза 5.2 — настраиваемые поля ТЗП
+    Route::get('/admin/procedures/{procedure}/custom-fields', [ProcedureCustomFieldController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/custom-fields', [ProcedureCustomFieldController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}/custom-fields/{customField}', [ProcedureCustomFieldController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('customField');
+    Route::delete('/admin/procedures/{procedure}/custom-fields/{customField}', [ProcedureCustomFieldController::class, 'destroy'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('customField');
+
+    // Фаза 5.3 — лоты ТЗП
+    Route::get('/admin/procedures/{procedure}/lots', [ProcedureLotController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/lots', [ProcedureLotController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}/lots/{lot}', [ProcedureLotController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('lot');
+    Route::delete('/admin/procedures/{procedure}/lots/{lot}', [ProcedureLotController::class, 'destroy'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('lot');
 
     Route::middleware('role:super_admin')->group(function (): void {
         Route::get('/admin/company-groups', [CompanyGroupController::class, 'index']);
