@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Contracts\ProcedureRepositoryInterface;
+use App\DTOs\ProcedureFilterDTO;
 use App\DTOs\PublicProcedureFilterDTO;
 use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureVisibility;
@@ -154,5 +155,71 @@ class ProcedureRepository implements ProcedureRepositoryInterface
         }
 
         $query->where('classifier_category_id', $filter->classifierCategoryId);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function paginateAdmin(ProcedureFilterDTO $filter): LengthAwarePaginator
+    {
+        $query = Procedure::query()
+            ->with(['company:id,name', 'category:id,name', 'responsibleUser:id,inn,email'])
+            ->orderByDesc('id');
+
+        match ($filter->trashed) {
+            'with' => $query->withTrashed(),
+            'only' => $query->onlyTrashed(),
+            default => null,
+        };
+
+        if ($filter->search !== null && trim($filter->search) !== '') {
+            $term = '%'.trim($filter->search).'%';
+            $query->where(static function (Builder $q) use ($term): void {
+                $q->where('number', 'ilike', $term)
+                    ->orWhere('title', 'ilike', $term);
+            });
+        }
+
+        if ($filter->type !== null) {
+            $query->where('type', $filter->type);
+        }
+
+        if ($filter->status !== null) {
+            $query->where('status', $filter->status);
+        }
+
+        if ($filter->visibility !== null) {
+            $query->where('visibility', $filter->visibility);
+        }
+
+        if ($filter->companyId !== null) {
+            $query->where('company_id', $filter->companyId);
+        }
+
+        if ($filter->classifierCategoryId !== null) {
+            $query->where('classifier_category_id', $filter->classifierCategoryId);
+        }
+
+        if ($filter->responsibleUserId !== null) {
+            $query->where('responsible_user_id', $filter->responsibleUserId);
+        }
+
+        return $query->paginate($filter->perPage);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findAdminById(int $id): ?Procedure
+    {
+        return Procedure::query()
+            ->with([
+                'company:id,name',
+                'category:id,name,company_group_id',
+                'responsibleUser:id,inn,email',
+                'creator:id,inn,email',
+                'auctionSetting',
+            ])
+            ->find($id);
     }
 }

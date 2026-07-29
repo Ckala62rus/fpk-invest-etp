@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
+use App\Http\Controllers\Admin\ProcedureController as AdminProcedureController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -94,6 +95,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/admin/activity-logs/{activityLog}', [ActivityLogController::class, 'show'])
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('activityLog');
+
+    // Фаза 5.1 — каркас ТЗП (черновики)
+    Route::get('/admin/procedures', [AdminProcedureController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor');
+    Route::post('/admin/procedures', [AdminProcedureController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin');
+    Route::get('/admin/procedures/{procedure}', [AdminProcedureController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}', [AdminProcedureController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
 
     Route::middleware('role:super_admin')->group(function (): void {
         Route::get('/admin/company-groups', [CompanyGroupController::class, 'index']);
