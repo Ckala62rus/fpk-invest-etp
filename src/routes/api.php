@@ -5,9 +5,13 @@ use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
+use App\Http\Controllers\Admin\ExtraConditionTemplateController;
 use App\Http\Controllers\Admin\ProcedureController as AdminProcedureController;
 use App\Http\Controllers\Admin\ProcedureCustomFieldController;
+use App\Http\Controllers\Admin\ProcedureDocumentController;
+use App\Http\Controllers\Admin\ProcedureExtraConditionController;
 use App\Http\Controllers\Admin\ProcedureLotController;
+use App\Http\Controllers\Admin\ProcedureParticipantController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -142,7 +146,54 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure')
         ->whereNumber('lot');
 
+    // Фаза 5.4 — документы ТЗП
+    Route::get('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::get('/admin/procedures/{procedure}/documents/{document}/download', [ProcedureDocumentController::class, 'download'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('document');
+    Route::delete('/admin/procedures/{procedure}/documents/{document}', [ProcedureDocumentController::class, 'destroy'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('document');
+
+    // Фаза 5.5 — участники / приглашения
+    Route::get('/admin/procedures/{procedure}/participants', [ProcedureParticipantController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/participants', [ProcedureParticipantController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}/participants/{participant}', [ProcedureParticipantController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('participant');
+    Route::delete('/admin/procedures/{procedure}/participants/{participant}', [ProcedureParticipantController::class, 'destroy'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('participant');
+
+    // Фаза 5.6 — доп. условия процедуры
+    Route::get('/admin/procedures/{procedure}/extra-conditions', [ProcedureExtraConditionController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}/extra-conditions', [ProcedureExtraConditionController::class, 'sync'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+
     Route::middleware('role:super_admin')->group(function (): void {
+        Route::get('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'index']);
+        Route::post('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'store']);
+        Route::put('/admin/extra-condition-templates/{extraConditionTemplate}', [ExtraConditionTemplateController::class, 'update'])
+            ->whereNumber('extraConditionTemplate');
+        Route::delete('/admin/extra-condition-templates/{extraConditionTemplate}', [ExtraConditionTemplateController::class, 'destroy'])
+            ->whereNumber('extraConditionTemplate');
+
         Route::get('/admin/company-groups', [CompanyGroupController::class, 'index']);
         Route::post('/admin/company-groups', [CompanyGroupController::class, 'store']);
         Route::get('/admin/company-groups/{companyGroup}', [CompanyGroupController::class, 'show'])
