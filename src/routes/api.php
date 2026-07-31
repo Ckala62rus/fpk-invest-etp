@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProcedureDocumentController;
 use App\Http\Controllers\Admin\ProcedureExtraConditionController;
 use App\Http\Controllers\Admin\ProcedureLotController;
 use App\Http\Controllers\Admin\ProcedureParticipantController;
+use App\Http\Controllers\Admin\ProposalAdmissionController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -222,6 +223,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/admin/procedures/{procedure}/extra-conditions', [ProcedureExtraConditionController::class, 'sync'])
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure');
+
+    Route::post('/admin/procedures/{procedure}/proposals/{proposal}/admission-decision', [ProposalAdmissionController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('proposal');
 
     Route::middleware('role:super_admin')->group(function (): void {
         Route::get('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'index']);
