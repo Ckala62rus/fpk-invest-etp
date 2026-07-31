@@ -25,6 +25,7 @@ use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\ProposalDocumentController;
 use App\Http\Controllers\PublicApi\CmsPageController as PublicCmsPageController;
 use App\Http\Controllers\PublicApi\ProcedureController as PublicProcedureController;
 use App\Http\Controllers\ServerTimeController;
@@ -96,6 +97,19 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/procedures/{procedure}/proposals', [ProposalController::class, 'store'])
         ->middleware('role:participant')
         ->whereNumber('procedure');
+
+    Route::middleware('role:participant')->group(function (): void {
+        Route::get('/proposals/{proposal}/documents', [ProposalDocumentController::class, 'index'])
+            ->whereNumber('proposal');
+        Route::post('/proposals/{proposal}/documents', [ProposalDocumentController::class, 'store'])
+            ->whereNumber('proposal');
+        Route::get('/proposals/{proposal}/documents/{document}/download', [ProposalDocumentController::class, 'download'])
+            ->whereNumber('proposal')
+            ->whereNumber('document');
+        Route::delete('/proposals/{proposal}/documents/{document}', [ProposalDocumentController::class, 'destroy'])
+            ->whereNumber('proposal')
+            ->whereNumber('document');
+    });
 
     Route::get('/admin/users', [UserController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor');
