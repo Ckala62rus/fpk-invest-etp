@@ -24,6 +24,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\PublicApi\CmsPageController as PublicCmsPageController;
 use App\Http\Controllers\PublicApi\ProcedureController as PublicProcedureController;
 use App\Http\Controllers\ServerTimeController;
@@ -87,6 +88,15 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    /*
+    |--------------------------------------------------------------------------
+    | Фаза 6 — запрос предложений (КП), сторона участника
+    |--------------------------------------------------------------------------
+    */
+    Route::post('/procedures/{procedure}/proposals', [ProposalController::class, 'store'])
+        ->middleware('role:participant')
+        ->whereNumber('procedure');
+
     Route::get('/admin/users', [UserController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor');
     Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store'])
