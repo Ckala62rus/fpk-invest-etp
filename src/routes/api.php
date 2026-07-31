@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
 use App\Http\Controllers\Admin\ExtraConditionTemplateController;
+use App\Http\Controllers\Admin\ProcedureChangeLogController;
 use App\Http\Controllers\Admin\ProcedureController as AdminProcedureController;
 use App\Http\Controllers\Admin\ProcedureCustomFieldController;
 use App\Http\Controllers\Admin\ProcedureDocumentController;
@@ -112,6 +113,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure');
     Route::put('/admin/procedures/{procedure}', [AdminProcedureController::class, 'update'])
         ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/publish', [AdminProcedureController::class, 'publish'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::delete('/admin/procedures/{procedure}', [AdminProcedureController::class, 'destroy'])
+        ->middleware('role:super_admin')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/restore', [AdminProcedureController::class, 'restore'])
+        ->middleware('role:super_admin')
+        ->whereNumber('procedure');
+    Route::get('/admin/procedures/{procedure}/change-logs', [ProcedureChangeLogController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('procedure');
 
     // Фаза 5.2 — настраиваемые поля ТЗП

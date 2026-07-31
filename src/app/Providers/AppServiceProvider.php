@@ -10,6 +10,8 @@ use App\Contracts\CompanyGroupRepositoryInterface;
 use App\Contracts\CompanyRepositoryInterface;
 use App\Contracts\ProcedureRepositoryInterface;
 use App\Contracts\UserRepositoryInterface;
+use App\Events\ProcedurePublished;
+use App\Listeners\SendProcedurePublishedNotifications;
 use App\Repositories\ActivityLogRepository;
 use App\Repositories\ClassifierCategoryRepository;
 use App\Repositories\CmsPageRepository;
@@ -18,6 +20,7 @@ use App\Repositories\CompanyRepository;
 use App\Repositories\ProcedureRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +45,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::listen(
+            ProcedurePublished::class,
+            SendProcedurePublishedNotifications::class,
+        );
     }
 }

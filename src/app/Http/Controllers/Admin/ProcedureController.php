@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateProcedureAction;
+use App\Actions\Admin\DeleteProcedureAction;
+use App\Actions\Admin\PublishProcedureAction;
+use App\Actions\Admin\RestoreProcedureAction;
 use App\Actions\Admin\UpdateProcedureAction;
 use App\Contracts\ProcedureRepositoryInterface;
 use App\DTOs\ProcedureFilterDTO;
@@ -19,11 +22,12 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Админский CRUD черновиков ТЗП (торгово-закупочных процедур) ЭТП.
+ * Админский CRUD ТЗП (торгово-закупочных процедур) ЭТП.
  *
- * Фаза 5.1: создание/просмотр/редактирование черновиков (КП и аукцион).
- * Роли: super_admin | trade_admin (запись); auditor — только чтение списка/карточки.
- * trade_admin видит и правит только свои процедуры (responsible_user_id).
+ * Фазы 5.1 / 5.7 / 5.8: черновики, публикация, soft delete и restore.
+ * Роли: super_admin | trade_admin (запись); auditor — чтение.
+ * trade_admin работает только со своими процедурами (responsible_user_id).
+ * Удаление/восстановление — только super_admin (по матрице permissions).
  */
 class ProcedureController extends ApiController
 {
@@ -43,19 +47,43 @@ class ProcedureController extends ApiController
     private readonly UpdateProcedureAction $updateProcedure;
 
     /**
+     * @var PublishProcedureAction
+     */
+    private readonly PublishProcedureAction $publishProcedure;
+
+    /**
+     * @var DeleteProcedureAction
+     */
+    private readonly DeleteProcedureAction $deleteProcedure;
+
+    /**
+     * @var RestoreProcedureAction
+     */
+    private readonly RestoreProcedureAction $restoreProcedure;
+
+    /**
      * @param ProcedureRepositoryInterface $procedures Репозиторий
      * @param CreateProcedureAction $createProcedure Создание черновика
      * @param UpdateProcedureAction $updateProcedure Обновление черновика
+     * @param PublishProcedureAction $publishProcedure Публикация
+     * @param DeleteProcedureAction $deleteProcedure Soft delete
+     * @param RestoreProcedureAction $restoreProcedure Восстановление
      * @return void
      */
     public function __construct(
         ProcedureRepositoryInterface $procedures,
         CreateProcedureAction $createProcedure,
         UpdateProcedureAction $updateProcedure,
+        PublishProcedureAction $publishProcedure,
+        DeleteProcedureAction $deleteProcedure,
+        RestoreProcedureAction $restoreProcedure,
     ) {
         $this->procedures = $procedures;
         $this->createProcedure = $createProcedure;
         $this->updateProcedure = $updateProcedure;
+        $this->publishProcedure = $publishProcedure;
+        $this->deleteProcedure = $deleteProcedure;
+        $this->restoreProcedure = $restoreProcedure;
     }
 
     /**
@@ -87,7 +115,6 @@ class ProcedureController extends ApiController
     /**
      * Карточка ТЗП для администратора.
      *
-     * @param ListProceduresRequest $request Для доступа к user (не используется для валидации)
      * @param int $procedure ID процедуры
      * @return JsonResponse
      *
@@ -122,7 +149,6 @@ class ProcedureController extends ApiController
 
         $data = $request->validated();
 
-        // trade_admin без super_admin всегда назначает себя ответственным
         if ($author->hasRole('trade_admin') && ! $author->hasRole('super_admin')) {
             $data['responsible_user_id'] = $author->id;
         }
@@ -136,7 +162,7 @@ class ProcedureController extends ApiController
     }
 
     /**
-     * Обновляет черновик ТЗП.
+     * Обновляет черновик ТЗП (с записью в change log).
      *
      * @param UpdateProcedureRequest $request Валидированные поля
      * @param Procedure $procedure Целевая процедура
@@ -148,11 +174,89 @@ class ProcedureController extends ApiController
     {
         $this->assertCanAccess($procedure);
 
-        $updated = $this->updateProcedure->execute($procedure, $request->validated());
+        /** @var User $editor */
+        $editor = $request->user();
+
+        $updated = $this->updateProcedure->execute($procedure, $request->validated(), $editor);
 
         return $this->success(
             new ProcedureResource($updated),
             'Процедура обновлена.',
+        );
+    }
+
+    /**
+     * Публикует черновик ТЗП и запускает рассылку.
+     *
+     * @param Procedure $procedure Черновик
+     * @return JsonResponse
+     *
+     * @throws AccessDeniedHttpException|DomainException
+     */
+    public function publish(Procedure $procedure): JsonResponse
+    {
+        $this->assertCanAccess($procedure);
+
+        /** @var User $publisher */
+        $publisher = request()->user();
+
+        $published = $this->publishProcedure->execute($procedure, $publisher);
+
+        return $this->success(
+            new ProcedureResource($published),
+            'Процедура опубликована.',
+        );
+    }
+
+    /**
+     * Мягко удаляет процедуру (папка «удалённые»).
+     *
+     * @param Procedure $procedure Целевая ТЗП
+     * @return JsonResponse
+     *
+     * @throws AccessDeniedHttpException|DomainException
+     */
+    public function destroy(Procedure $procedure): JsonResponse
+    {
+        $this->assertCanDelete($procedure);
+
+        /** @var User $deleter */
+        $deleter = request()->user();
+
+        $this->deleteProcedure->execute($procedure, $deleter);
+
+        return $this->success(
+            null,
+            'Процедура перемещена в удалённые.',
+        );
+    }
+
+    /**
+     * Восстанавливает процедуру из удалённых.
+     *
+     * @param int $procedure ID (в т.ч. soft-deleted)
+     * @return JsonResponse
+     *
+     * @throws NotFoundHttpException|AccessDeniedHttpException|DomainException
+     */
+    public function restore(int $procedure): JsonResponse
+    {
+        $model = Procedure::withTrashed()->find($procedure);
+
+        if ($model === null) {
+            throw new NotFoundHttpException('Процедура не найдена.');
+        }
+
+        $this->assertCanDelete($model);
+
+        /** @var User $restorer */
+        $restorer = request()->user();
+
+        $restored = $this->restoreProcedure->execute($model, $restorer);
+
+        return $this->success(
+            new ProcedureResource($restored),
+            'Процедура восстановлена.',
         );
     }
 
@@ -182,5 +286,23 @@ class ProcedureController extends ApiController
         }
 
         throw new AccessDeniedHttpException('Недостаточно прав для доступа к этой процедуре.');
+    }
+
+    /**
+     * Удаление/восстановление — только super_admin (матрица RBAC).
+     *
+     * @param Procedure $procedure Целевая процедура
+     * @return void
+     *
+     * @throws AccessDeniedHttpException
+     */
+    private function assertCanDelete(Procedure $procedure): void
+    {
+        /** @var User|null $user */
+        $user = request()->user();
+
+        if ($user === null || ! $user->hasRole('super_admin')) {
+            throw new AccessDeniedHttpException('Удалять и восстанавливать процедуры может только super_admin.');
+        }
     }
 }
