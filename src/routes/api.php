@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProcedureExtraConditionController;
 use App\Http\Controllers\Admin\ProcedureLotController;
 use App\Http\Controllers\Admin\ProcedureParticipantController;
 use App\Http\Controllers\Admin\ProposalAdmissionController;
+use App\Http\Controllers\Admin\ProposalMessageController as AdminProposalMessageController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ProposalDocumentController;
+use App\Http\Controllers\ProposalMessageController;
 use App\Http\Controllers\PublicApi\CmsPageController as PublicCmsPageController;
 use App\Http\Controllers\PublicApi\ProcedureController as PublicProcedureController;
 use App\Http\Controllers\ServerTimeController;
@@ -110,6 +112,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::delete('/proposals/{proposal}/documents/{document}', [ProposalDocumentController::class, 'destroy'])
             ->whereNumber('proposal')
             ->whereNumber('document');
+
+        Route::get('/proposals/{proposal}/messages', [ProposalMessageController::class, 'index'])
+            ->whereNumber('proposal');
+        Route::post('/proposals/{proposal}/messages', [ProposalMessageController::class, 'store'])
+            ->whereNumber('proposal');
     });
 
     Route::get('/admin/users', [UserController::class, 'index'])
@@ -225,6 +232,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure');
 
     Route::post('/admin/procedures/{procedure}/proposals/{proposal}/admission-decision', [ProposalAdmissionController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('proposal');
+
+    Route::get('/admin/procedures/{procedure}/proposals/{proposal}/messages', [AdminProposalMessageController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('proposal');
+    Route::post('/admin/procedures/{procedure}/proposals/{proposal}/messages', [AdminProposalMessageController::class, 'store'])
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure')
         ->whereNumber('proposal');
