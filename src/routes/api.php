@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
+use App\Http\Controllers\Admin\ExternalInviteController;
 use App\Http\Controllers\Admin\ExtraConditionTemplateController;
+use App\Http\Controllers\Admin\ProcedureChangeApprovalController;
 use App\Http\Controllers\Admin\ProcedureChangeLogController;
 use App\Http\Controllers\Admin\ProcedureController as AdminProcedureController;
 use App\Http\Controllers\Admin\ProcedureCustomFieldController;
@@ -15,6 +18,7 @@ use App\Http\Controllers\Admin\ProcedureLotController;
 use App\Http\Controllers\Admin\ProcedureParticipantController;
 use App\Http\Controllers\Admin\ProposalAdmissionController;
 use App\Http\Controllers\Admin\ProposalMessageController as AdminProposalMessageController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -117,6 +121,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->whereNumber('proposal');
         Route::post('/proposals/{proposal}/messages', [ProposalMessageController::class, 'store'])
             ->whereNumber('proposal');
+
+        Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])
+            ->whereNumber('proposal');
     });
 
     Route::get('/admin/users', [UserController::class, 'index'])
@@ -157,6 +164,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure');
     Route::get('/admin/procedures/{procedure}/change-logs', [ProcedureChangeLogController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/change-logs/{changeLog}/approve', [ProcedureChangeApprovalController::class, 'approve'])
+        ->middleware('role:super_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('changeLog');
+    Route::post('/admin/procedures/{procedure}/change-logs/{changeLog}/reject', [ProcedureChangeApprovalController::class, 'reject'])
+        ->middleware('role:super_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('changeLog');
+
+    Route::post('/admin/procedures/{procedure}/external-invites', [ExternalInviteController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure');
 
     // Фаза 5.2 — настраиваемые поля ТЗП
@@ -236,6 +255,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure')
         ->whereNumber('proposal');
 
+    Route::get('/admin/procedures/{procedure}/proposals', [AdminProposalController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::get('/admin/procedures/{procedure}/proposals/{proposal}', [AdminProposalController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('proposal');
+
     Route::get('/admin/procedures/{procedure}/proposals/{proposal}/messages', [AdminProposalMessageController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('procedure')
@@ -246,6 +273,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('proposal');
 
     Route::middleware('role:super_admin')->group(function (): void {
+        Route::get('/admin/settings', [SettingController::class, 'index']);
+        Route::put('/admin/settings', [SettingController::class, 'update']);
+
         Route::get('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'index']);
         Route::post('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'store']);
         Route::put('/admin/extra-condition-templates/{extraConditionTemplate}', [ExtraConditionTemplateController::class, 'update'])

@@ -8,6 +8,7 @@ use App\Contracts\ClassifierCategoryRepositoryInterface;
 use App\Contracts\CmsPageRepositoryInterface;
 use App\Contracts\CompanyGroupRepositoryInterface;
 use App\Contracts\CompanyRepositoryInterface;
+use App\Contracts\FpkExportClientInterface;
 use App\Contracts\ProcedureRepositoryInterface;
 use App\Contracts\UserRepositoryInterface;
 use App\Events\ProcedurePublished;
@@ -20,7 +21,10 @@ use App\Repositories\CompanyRepository;
 use App\Repositories\ProcedureRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
+use App\Services\StubFpkExportClient;
+use App\Models\Proposal;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CompanyRepositoryInterface::class, CompanyRepository::class);
         $this->app->bind(CmsPageRepositoryInterface::class, CmsPageRepository::class);
         $this->app->bind(ProcedureRepositoryInterface::class, ProcedureRepository::class);
+        $this->app->bind(FpkExportClientInterface::class, StubFpkExportClient::class);
     }
 
     /**
@@ -45,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(Proposal::class, \App\Policies\ProposalPolicy::class);
+
         Event::listen(
             ProcedurePublished::class,
             SendProcedurePublishedNotifications::class,

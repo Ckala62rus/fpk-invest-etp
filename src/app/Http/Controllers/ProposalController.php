@@ -8,8 +8,10 @@ use App\Exceptions\DomainException;
 use App\Http\Requests\Api\SubmitProposalRequest;
 use App\Http\Resources\ProposalResource;
 use App\Models\Procedure;
+use App\Models\Proposal;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Подача коммерческих предложений (КП) участником ЭТП.
@@ -43,6 +45,31 @@ class ProposalController extends ApiController
         return $this->created(
             new ProposalResource($proposal),
             'Коммерческое предложение подано.',
+        );
+    }
+
+    /**
+     * Просмотр своей заявки участником (полное содержимое).
+     *
+     * @param Proposal $proposal Заявка
+     * @return JsonResponse
+     *
+     * @throws AccessDeniedHttpException
+     */
+    public function show(Proposal $proposal): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = auth()->user();
+
+        if ($user === null || (int) $proposal->user_id !== (int) $user->id) {
+            throw new AccessDeniedHttpException('Доступна только своя заявка.');
+        }
+
+        $proposal->load(['fieldValues.customField', 'documents', 'admissionDecision']);
+
+        return $this->success(
+            new ProposalResource($proposal),
+            'Ваша заявка.',
         );
     }
 }
