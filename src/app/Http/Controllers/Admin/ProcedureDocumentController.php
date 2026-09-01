@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\UploadProcedureDocumentAction;
 use App\Enums\ProcedureStatus;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\ApiController;
@@ -54,38 +55,33 @@ class ProcedureDocumentController extends ApiController
      *
      * @param StoreProcedureDocumentRequest $request Файл document
      * @param Procedure $procedure Родительская ТЗП
+     * @param UploadProcedureDocumentAction $uploadAction Загрузка (draft / accepting)
      * @return JsonResponse
      *
      * @throws AccessDeniedHttpException|DomainException
      */
-    public function store(StoreProcedureDocumentRequest $request, Procedure $procedure): JsonResponse
-    {
+    public function store(
+        StoreProcedureDocumentRequest $request,
+        Procedure $procedure,
+        UploadProcedureDocumentAction $uploadAction,
+    ): JsonResponse {
         $this->assertCanAccess($procedure);
-        $this->assertDraft($procedure);
 
         /** @var User $user */
         $user = $request->user();
         $file = $request->file('document');
 
-        $path = $file->store("procedure_documents/{$procedure->id}", 'local');
-
-        $nextVersion = (int) ProcedureDocument::withTrashed()
-            ->where('procedure_id', $procedure->id)
-            ->max('version') + 1;
-
-        $document = ProcedureDocument::query()->create([
-            'procedure_id' => $procedure->id,
-            'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'version' => max(1, $nextVersion),
-            'uploaded_by' => $user->id,
-        ]);
+        $document = $uploadAction->execute($procedure, $file, $user);
 
         $document->load('uploader:id,inn,email');
 
+        $message = $procedure->status === ProcedureStatus::Accepting
+            ? 'Документ загружен и ожидает согласования.'
+            : 'Документ загружен.';
+
         return $this->created(
             new ProcedureDocumentResource($document),
-            'Документ загружен.',
+            $message,
         );
     }
 
