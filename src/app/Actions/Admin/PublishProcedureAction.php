@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Admin\ExportProcedureToFpkAction;
 use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureType;
 use App\Enums\ProcedureVisibility;
@@ -18,6 +19,15 @@ use Illuminate\Support\Facades\DB;
  */
 class PublishProcedureAction
 {
+    /**
+     * @param ExportProcedureToFpkAction $exportToFpk Экспорт на fpkinvest.ru
+     * @return void
+     */
+    public function __construct(
+        private readonly ExportProcedureToFpkAction $exportToFpk,
+    ) {
+    }
+
     /**
      * Публикует процедуру от имени администратора.
      *
@@ -60,6 +70,10 @@ class PublishProcedureAction
             ]);
 
             ProcedurePublished::dispatch($procedure);
+
+            if ($procedure->type === ProcedureType::RequestForProposal) {
+                $this->exportToFpk->execute($procedure);
+            }
 
             return $procedure;
         });
