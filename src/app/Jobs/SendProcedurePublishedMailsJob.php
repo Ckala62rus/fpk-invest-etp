@@ -2,89 +2,51 @@
 
 namespace App\Jobs;
 
-use App\Enums\ProcedureVisibility;
-use App\Mail\ProcedurePublishedMail;
 use App\Models\Procedure;
-use App\Models\User;
+use App\Services\NotificationMailService;
+use App\Services\ProcedureNotificationRecipientService;
+use App\Support\NotificationTemplateCode;
+use App\Support\ProcedureNotificationPayload;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Mail;
 
 /**
- * Рассылка писем о публикации ТЗП (торгово-закупочной процедуры).
- *
- * Фаза 5.7: для закрытых — приглашённые участники; для открытых — подписчики категории.
+ * Рассылка писем о публикации ТЗП (фаза 5.7 / 7.3 / 7.6).
  */
 class SendProcedurePublishedMailsJob implements ShouldQueue
 {
     use Queueable;
 
     /**
-     * ID опубликованной процедуры.
-     *
-     * @var int
-     */
-    public int $procedureId;
-
-    /**
      * @param int $procedureId Идентификатор ТЗП
      * @return void
      */
-    public function __construct(int $procedureId)
-    {
-        $this->procedureId = $procedureId;
+    public function __construct(
+        public int $procedureId,
+    ) {
     }
 
     /**
-     * Отправляет письма получателям публикации.
-     *
+     * @param NotificationMailService $mailService Сервис отправки
+     * @param ProcedureNotificationRecipientService $recipients Получатели
      * @return void
      */
-    public function handle(): void
-    {
+    public function handle(
+        NotificationMailService $mailService,
+        ProcedureNotificationRecipientService $recipients,
+    ): void {
         $procedure = Procedure::query()
-            ->with(['participants.user', 'category'])
+            ->with(['category', 'company'])
             ->find($this->procedureId);
 
         if ($procedure === null) {
             return;
         }
 
-        foreach ($this->resolveRecipients($procedure) as $email) {
-            Mail::to($email)->send(new ProcedurePublishedMail($procedure));
-        }
-    }
-
-    /**
-     * Собирает уникальные email получателей.
-     *
-     * @param Procedure $procedure Опубликованная ТЗП
-     * @return list<string>
-     */
-    private function resolveRecipients(Procedure $procedure): array
-    {
-        if ($procedure->visibility === ProcedureVisibility::Closed) {
-            return $procedure->participants
-                ->pluck('user.email')
-                ->filter()
-                ->unique()
-                ->values()
-                ->all();
-        }
-
-        // Открытая: участники с подпиской на категорию классификатора
-        return User::query()
-            ->role('participant')
-            ->whereHas('categorySubscriptions', static function ($q) use ($procedure): void {
-                $q->where('classifier_categories.id', $procedure->classifier_category_id);
-            })
-            ->whereDoesntHave('notificationSettings', static function ($q): void {
-                $q->where('all_disabled', true);
-            })
-            ->pluck('email')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $mailService->sendToUsers(
+            NotificationTemplateCode::ProcedurePublished,
+            $recipients->recipientsForProcedure($procedure),
+            ProcedureNotificationPayload::forProcedure($procedure),
+        );
     }
 }

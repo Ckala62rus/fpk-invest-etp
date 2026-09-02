@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CompanyGroupController;
+use App\Http\Controllers\Admin\EmailSendLogController;
 use App\Http\Controllers\Admin\ExternalInviteController;
+use App\Http\Controllers\Admin\NotificationTemplateController;
 use App\Http\Controllers\Admin\ExtraConditionTemplateController;
 use App\Http\Controllers\Admin\ProcedureChangeApprovalController;
 use App\Http\Controllers\Admin\ProcedureChangeLogController;
@@ -319,6 +321,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->whereNumber('cmsPage');
         Route::delete('/admin/cms-pages/{cmsPage}', [AdminCmsPageController::class, 'destroy'])
             ->whereNumber('cmsPage');
+
+        // Фаза 7 — шаблоны уведомлений и журнал отправки
+        Route::get('/admin/notification-templates', [NotificationTemplateController::class, 'index']);
+        Route::post('/admin/notification-templates', [NotificationTemplateController::class, 'store']);
+        Route::get('/admin/notification-templates/{notificationTemplate}', [NotificationTemplateController::class, 'show'])
+            ->whereNumber('notificationTemplate');
+        Route::put('/admin/notification-templates/{notificationTemplate}', [NotificationTemplateController::class, 'update'])
+            ->whereNumber('notificationTemplate');
+        Route::delete('/admin/notification-templates/{notificationTemplate}', [NotificationTemplateController::class, 'destroy'])
+            ->whereNumber('notificationTemplate');
+
+        Route::get('/admin/email-send-logs', [EmailSendLogController::class, 'index']);
     });
 
     Route::get('/subscriptions', [SubscriptionController::class, 'show']);

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\NotificationEventType;
+use Database\Factories\NotificationTemplateFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -21,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class NotificationTemplate extends Model
 {
+    /** @use HasFactory<NotificationTemplateFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'code',
         'name',

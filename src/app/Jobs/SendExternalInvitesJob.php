@@ -2,14 +2,15 @@
 
 namespace App\Jobs;
 
-use App\Mail\ExternalProcedureInviteMail;
 use App\Models\ExternalInviteBatch;
+use App\Services\NotificationMailService;
+use App\Support\NotificationTemplateCode;
+use App\Support\ProcedureNotificationPayload;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Mail;
 
 /**
- * Отправка внешних приглашений на процедуру (фаза 6.8).
+ * Отправка внешних приглашений на процедуру (фаза 6.8 / 7.3).
  */
 class SendExternalInvitesJob implements ShouldQueue
 {
@@ -25,9 +26,10 @@ class SendExternalInvitesJob implements ShouldQueue
     }
 
     /**
+     * @param NotificationMailService $mailService Сервис отправки
      * @return void
      */
-    public function handle(): void
+    public function handle(NotificationMailService $mailService): void
     {
         $batch = ExternalInviteBatch::query()
             ->with('procedure')
@@ -37,8 +39,14 @@ class SendExternalInvitesJob implements ShouldQueue
             return;
         }
 
+        $data = ProcedureNotificationPayload::forProcedure($batch->procedure);
+
         foreach ($batch->emails as $email) {
-            Mail::to($email)->send(new ExternalProcedureInviteMail($batch->procedure));
+            $mailService->send(
+                NotificationTemplateCode::ExternalProcedureInvite,
+                $email,
+                $data,
+            );
         }
 
         $batch->update(['sent_at' => now()]);

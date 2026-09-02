@@ -3,14 +3,15 @@
 namespace App\Jobs;
 
 use App\Models\Procedure;
+use App\Services\NotificationMailService;
+use App\Services\ProcedureNotificationRecipientService;
+use App\Support\NotificationTemplateCode;
+use App\Support\ProcedureNotificationPayload;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Log;
 
 /**
- * Уведомление участников об изменении документации (фаза 6.6).
- *
- * Полная рассылка — в фазе 7; сейчас логируем для аудита.
+ * Уведомление участников об изменении документации (фаза 6.6 / 7.3).
  */
 class NotifyProcedureDocumentationChangedJob implements ShouldQueue
 {
@@ -28,20 +29,29 @@ class NotifyProcedureDocumentationChangedJob implements ShouldQueue
     }
 
     /**
+     * @param NotificationMailService $mailService Сервис отправки
+     * @param ProcedureNotificationRecipientService $recipients Получатели
      * @return void
      */
-    public function handle(): void
-    {
+    public function handle(
+        NotificationMailService $mailService,
+        ProcedureNotificationRecipientService $recipients,
+    ): void {
         $procedure = Procedure::query()->find($this->procedureId);
 
         if ($procedure === null) {
             return;
         }
 
-        Log::info('Procedure documentation changed notification queued', [
-            'procedure_id' => $this->procedureId,
-            'change_log_id' => $this->changeLogId,
-            'number' => $procedure->number,
-        ]);
+        $data = array_merge(
+            ProcedureNotificationPayload::forProcedure($procedure),
+            ['change_log_id' => $this->changeLogId],
+        );
+
+        $mailService->sendToUsers(
+            NotificationTemplateCode::ProcedureDocumentationChanged,
+            $recipients->recipientsForProcedure($procedure),
+            $data,
+        );
     }
 }

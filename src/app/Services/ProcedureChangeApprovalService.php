@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Enums\ApprovalStatus;
 use App\Enums\ProcedureStatus;
+use App\Events\ProcedureDocumentationChanged;
 use App\Exceptions\DomainException;
-use App\Jobs\NotifyProcedureDocumentationChangedJob;
 use App\Models\Procedure;
 use App\Models\ProcedureChangeLog;
 use App\Models\ProcedureDocument;
@@ -63,7 +63,7 @@ class ProcedureChangeApprovalService
                 ])
                 ->log('Изменение документации согласовано');
 
-            NotifyProcedureDocumentationChangedJob::dispatch($procedure->id, $changeLog->id);
+            ProcedureDocumentationChanged::dispatch($procedure, $changeLog->id);
 
             $changeLog->update(['notifications_sent_at' => now()]);
 

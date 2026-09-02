@@ -4,6 +4,7 @@ namespace App\Actions\Admin;
 
 use App\DTOs\ApproveUserDTO;
 use App\Enums\UserStatus;
+use App\Events\UserApproved;
 use App\Models\User;
 
 /**
@@ -25,6 +26,10 @@ class ApproveUserAction
             'status' => UserStatus::Active,
         ]);
 
-        return $dto->user->refresh();
+        $user = $dto->user->refresh();
+
+        UserApproved::dispatch($user, $dto->approvedBy);
+
+        return $user;
     }
 }

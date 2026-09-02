@@ -11,8 +11,14 @@ use App\Contracts\CompanyRepositoryInterface;
 use App\Contracts\FpkExportClientInterface;
 use App\Contracts\ProcedureRepositoryInterface;
 use App\Contracts\UserRepositoryInterface;
+use App\Events\BidCancelled;
+use App\Events\ProcedureDocumentationChanged;
 use App\Events\ProcedurePublished;
+use App\Events\UserApproved;
+use App\Listeners\SendBidCancelledNotification;
+use App\Listeners\SendProcedureDocumentationChangedNotification;
 use App\Listeners\SendProcedurePublishedNotifications;
+use App\Listeners\SendUserApprovedNotification;
 use App\Repositories\ActivityLogRepository;
 use App\Repositories\ClassifierCategoryRepository;
 use App\Repositories\CmsPageRepository;
@@ -55,6 +61,21 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             ProcedurePublished::class,
             SendProcedurePublishedNotifications::class,
+        );
+
+        Event::listen(
+            UserApproved::class,
+            SendUserApprovedNotification::class,
+        );
+
+        Event::listen(
+            ProcedureDocumentationChanged::class,
+            SendProcedureDocumentationChangedNotification::class,
+        );
+
+        Event::listen(
+            BidCancelled::class,
+            SendBidCancelledNotification::class,
         );
     }
 }
