@@ -226,4 +226,53 @@ class PlaceBidActionTest extends TestCase
         $this->expectException(DomainException::class);
         $this->action->execute($procedure->fresh(['auctionSetting']), $lot->fresh(), $participant, '100500.00');
     }
+
+    /**
+     * Ставка в окне продления сдвигает ends_at.
+     *
+     * @return void
+     */
+    public function test_bid_near_deadline_extends_ends_at(): void
+    {
+        $participant = User::factory()->create();
+        $participant->assignRole('participant');
+
+        $procedure = Procedure::factory()->auction()->create([
+            'status' => ProcedureStatus::InProgress,
+            'visibility' => ProcedureVisibility::Open,
+            'starts_at' => now()->subHour(),
+            'ends_at' => now()->addMinutes(2),
+        ]);
+
+        $procedure->auctionSetting()->create([
+            'bid_mode' => BidMode::Standard,
+            'auction_mode' => AuctionMode::Decrease,
+            'extension_minutes' => 5,
+            'extension_trigger_minutes' => 3,
+            'idle_timeout_minutes' => 30,
+            'forbid_equal_bids' => true,
+            'winner_mode' => WinnerMode::PerLot,
+            'only_admitted_from_rfp' => false,
+            'is_paused' => false,
+        ]);
+
+        $lot = ProcedureLot::factory()->create([
+            'procedure_id' => $procedure->id,
+            'start_price' => '100000.00',
+            'bid_step' => '1000.00',
+        ]);
+
+        $originalEndsAt = $procedure->ends_at->copy();
+
+        $this->action->execute(
+            $procedure->fresh(['auctionSetting']),
+            $lot,
+            $participant,
+            '99000.00',
+        );
+
+        $this->assertTrue(
+            $procedure->fresh()->ends_at->equalTo($originalEndsAt->addMinutes(5)),
+        );
+    }
 }

@@ -14,6 +14,7 @@ use App\Models\ProcedureLot;
 use App\Models\Proposal;
 use App\Models\User;
 use App\Services\AuctionSessionService;
+use App\Services\AuctionTimerService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,10 +27,12 @@ class PlaceBidAction
 {
     /**
      * @param AuctionSessionService $sessions Проверка, что торги принимают ставки
+     * @param AuctionTimerService $timer Автопродление ends_at (фаза 8.4)
      * @return void
      */
     public function __construct(
         private readonly AuctionSessionService $sessions,
+        private readonly AuctionTimerService $timer,
     ) {
     }
 
@@ -69,13 +72,18 @@ class PlaceBidAction
         $this->assertParticipantAllowed($procedure, $participant);
 
         return DB::transaction(function () use ($procedure, $lot, $participant, $amount, $ipAddress): AuctionBid {
+            $lockedProcedure = Procedure::query()
+                ->whereKey($procedure->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             /** @var ProcedureLot $lockedLot */
             $lockedLot = ProcedureLot::query()
                 ->whereKey($lot->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $settings = $procedure->auctionSetting()->lockForUpdate()->first();
+            $settings = $lockedProcedure->auctionSetting()->lockForUpdate()->first();
 
             if ($settings === null) {
                 throw new DomainException(
@@ -109,7 +117,7 @@ class PlaceBidAction
             }
 
             $bid = AuctionBid::query()->create([
-                'procedure_id' => $procedure->id,
+                'procedure_id' => $lockedProcedure->id,
                 'lot_id' => $lockedLot->id,
                 'user_id' => $participant->id,
                 'amount' => $amount,
@@ -119,12 +127,14 @@ class PlaceBidAction
 
             $lockedLot->update(['current_price' => $amount]);
 
+            $this->timer->extendIfNeeded($lockedProcedure, $settings);
+
             activity('auction_bid')
                 ->causedBy($participant)
                 ->performedOn($bid)
                 ->event('placed')
                 ->withProperties([
-                    'procedure_id' => $procedure->id,
+                    'procedure_id' => $lockedProcedure->id,
                     'lot_id' => $lockedLot->id,
                     'amount' => $amount,
                 ])

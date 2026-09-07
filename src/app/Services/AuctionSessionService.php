@@ -183,6 +183,46 @@ class AuctionSessionService
     }
 
     /**
+     * Завершает торги без администратора (простой или истечение ends_at, фаза 8.5).
+     *
+     * @param Procedure $procedure Аукцион in_progress
+     * @param string $event Код события аудита
+     * @param string $logMessage Текст журнала
+     * @return Procedure
+     *
+     * @throws DomainException
+     */
+    public function finishAutomatically(
+        Procedure $procedure,
+        string $event = 'auction_finished_idle',
+        string $logMessage = 'Аукцион завершён автоматически',
+    ): Procedure {
+        $this->assertAuction($procedure);
+        $this->assertInProgress($procedure);
+
+        $settings = $this->requireSettings($procedure);
+
+        return DB::transaction(function () use ($procedure, $settings, $event, $logMessage): Procedure {
+            $procedure->update([
+                'status' => ProcedureStatus::Completed,
+                'completed_at' => now(),
+            ]);
+
+            $settings->update([
+                'is_paused' => false,
+                'paused_at' => null,
+            ]);
+
+            activity('procedure')
+                ->performedOn($procedure)
+                ->event($event)
+                ->log($logMessage);
+
+            return $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
+        });
+    }
+
+    /**
      * Можно ли сейчас принимать ставки.
      *
      * @param Procedure $procedure Процедура
@@ -195,6 +235,10 @@ class AuctionSessionService
         }
 
         if ($procedure->status !== ProcedureStatus::InProgress) {
+            return false;
+        }
+
+        if ($procedure->ends_at !== null && $procedure->ends_at->lte(now())) {
             return false;
         }
 
