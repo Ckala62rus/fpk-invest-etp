@@ -77,17 +77,7 @@ class ProcedureResource extends JsonResource
                     return null;
                 }
 
-                return [
-                    'id' => $this->auctionSetting->id,
-                    'bid_mode' => $this->auctionSetting->bid_mode?->value,
-                    'auction_mode' => $this->auctionSetting->auction_mode?->value,
-                    'extension_minutes' => $this->auctionSetting->extension_minutes,
-                    'extension_trigger_minutes' => $this->auctionSetting->extension_trigger_minutes,
-                    'idle_timeout_minutes' => $this->auctionSetting->idle_timeout_minutes,
-                    'forbid_equal_bids' => $this->auctionSetting->forbid_equal_bids,
-                    'winner_mode' => $this->auctionSetting->winner_mode?->value,
-                    'only_admitted_from_rfp' => $this->auctionSetting->only_admitted_from_rfp,
-                ];
+                return (new AuctionSettingResource($this->auctionSetting))->resolve();
             }),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

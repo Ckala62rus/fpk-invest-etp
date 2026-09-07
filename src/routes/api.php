@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AuctionSettingController;
 use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
 use App\Http\Controllers\Admin\CompanyController;
@@ -211,6 +212,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure')
         ->whereNumber('lot');
+
+    // Фаза 8.1 — настройки электронного аукциона
+    Route::get('/admin/procedures/{procedure}/auction-settings', [AuctionSettingController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
+    Route::put('/admin/procedures/{procedure}/auction-settings', [AuctionSettingController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
 
     // Фаза 5.4 — документы ТЗП
     Route::get('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'index'])
