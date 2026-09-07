@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AuctionBidCancelController;
 use App\Http\Controllers\Admin\AuctionLifecycleController;
 use App\Http\Controllers\Admin\AuctionSettingController;
 use App\Http\Controllers\Admin\ClassifierCategoryController;
@@ -245,6 +246,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/admin/procedures/{procedure}/auction/finish', [AuctionLifecycleController::class, 'finish'])
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure');
+
+    Route::post('/admin/procedures/{procedure}/bids/{bid}/cancel', [AuctionBidCancelController::class, 'store'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure')
+        ->whereNumber('bid');
 
     // Фаза 5.4 — документы ТЗП
     Route::get('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'index'])
