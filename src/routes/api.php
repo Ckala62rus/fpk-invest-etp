@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAuctionBidController;
 use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AuctionBidCancelController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AuctionBidController;
 use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\ParticipantAuctionLotController;
 use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
@@ -131,7 +133,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])
             ->whereNumber('proposal');
 
-        // Фаза 8.3 — ставки аукциона
+        // Фаза 8.3 / 8.7 — ставки и лоты аукциона (участник)
+        Route::get('/procedures/{procedure}/lots', [ParticipantAuctionLotController::class, 'index'])
+            ->whereNumber('procedure');
         Route::get('/procedures/{procedure}/lots/{lot}/bids', [AuctionBidController::class, 'index'])
             ->whereNumber('procedure')
             ->whereNumber('lot');
@@ -251,6 +255,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure')
         ->whereNumber('bid');
+
+    Route::get('/admin/procedures/{procedure}/lots/{lot}/bids', [AdminAuctionBidController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('lot');
 
     // Фаза 5.4 — документы ТЗП
     Route::get('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'index'])

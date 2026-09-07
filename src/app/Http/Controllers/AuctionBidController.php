@@ -92,6 +92,10 @@ class AuctionBidController extends ApiController
             ->orderByDesc('id')
             ->get();
 
+        foreach ($bids as $bid) {
+            $this->authorize('view', $bid);
+        }
+
         return $this->success(
             AuctionBidResource::collection($bids)->resolve(),
             'Ваши ставки по лоту.',

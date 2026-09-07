@@ -28,6 +28,7 @@ use App\Repositories\ProcedureRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
 use App\Services\StubFpkExportClient;
+use App\Models\AuctionBid;
 use App\Models\Proposal;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -57,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Proposal::class, \App\Policies\ProposalPolicy::class);
+        Gate::policy(AuctionBid::class, \App\Policies\AuctionBidPolicy::class);
 
         Event::listen(
             ProcedurePublished::class,
