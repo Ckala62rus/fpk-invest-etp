@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->job(new \App\Jobs\SendAuctionRemindersJob)->everyFifteenMinutes();
+        $schedule->job(new \App\Jobs\FinishIdleAuctionsJob)->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport(DomainException::class);
