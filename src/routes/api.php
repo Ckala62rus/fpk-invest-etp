@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AuctionLifecycleController;
 use App\Http\Controllers\Admin\AuctionSettingController;
 use App\Http\Controllers\Admin\ClassifierCategoryController;
 use App\Http\Controllers\Admin\CmsPageController as AdminCmsPageController;
@@ -218,6 +219,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('procedure');
     Route::put('/admin/procedures/{procedure}/auction-settings', [AuctionSettingController::class, 'update'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+
+    // Фаза 8.2 — жизненный цикл торгов
+    Route::post('/admin/procedures/{procedure}/auction/start', [AuctionLifecycleController::class, 'start'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/auction/pause', [AuctionLifecycleController::class, 'pause'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/auction/resume', [AuctionLifecycleController::class, 'resume'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('procedure');
+    Route::post('/admin/procedures/{procedure}/auction/finish', [AuctionLifecycleController::class, 'finish'])
         ->middleware('role:super_admin|trade_admin')
         ->whereNumber('procedure');
 

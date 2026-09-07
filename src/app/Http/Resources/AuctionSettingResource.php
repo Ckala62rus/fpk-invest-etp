@@ -32,6 +32,8 @@ class AuctionSettingResource extends JsonResource
             'winner_mode' => $this->winner_mode?->value,
             'winner_mode_label' => $this->winner_mode?->label(),
             'only_admitted_from_rfp' => $this->only_admitted_from_rfp,
+            'is_paused' => $this->is_paused,
+            'paused_at' => $this->paused_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

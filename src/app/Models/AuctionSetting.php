@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $forbid_equal_bids Запрет одинаковых ставок
  * @property WinnerMode $winner_mode Способ определения победителя
  * @property bool $only_admitted_from_rfp Только участники, допущенные на 1-м этапе
+ * @property bool $is_paused Торги временно приостановлены
+ * @property \Illuminate\Support\Carbon|null $paused_at Когда поставлено на паузу
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  */
@@ -36,6 +38,8 @@ class AuctionSetting extends Model
         'forbid_equal_bids',
         'winner_mode',
         'only_admitted_from_rfp',
+        'is_paused',
+        'paused_at',
     ];
 
     /**
@@ -54,6 +58,8 @@ class AuctionSetting extends Model
             'idle_timeout_minutes' => 'integer',
             'forbid_equal_bids' => 'boolean',
             'only_admitted_from_rfp' => 'boolean',
+            'is_paused' => 'boolean',
+            'paused_at' => 'datetime',
         ];
     }
 
