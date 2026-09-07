@@ -31,6 +31,7 @@ use App\Http\Controllers\Auth\PasswordResetAdminRequestController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\AuctionBidController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\ProfileController;
@@ -128,6 +129,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])
             ->whereNumber('proposal');
+
+        // Фаза 8.3 — ставки аукциона
+        Route::get('/procedures/{procedure}/lots/{lot}/bids', [AuctionBidController::class, 'index'])
+            ->whereNumber('procedure')
+            ->whereNumber('lot');
+        Route::post('/procedures/{procedure}/lots/{lot}/bids', [AuctionBidController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->whereNumber('procedure')
+            ->whereNumber('lot');
     });
 
     Route::get('/admin/users', [UserController::class, 'index'])
