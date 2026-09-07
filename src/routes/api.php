@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminAuctionBidController;
+use App\Http\Controllers\Admin\AdminAuctionPresenceController;
 use App\Http\Controllers\Admin\AdminProposalController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\AuctionBidCancelController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AuctionBidController;
+use App\Http\Controllers\AuctionPresenceController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ParticipantAuctionLotController;
 use App\Http\Controllers\CorruptionReportController;
@@ -143,6 +145,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
             ->middleware('throttle:60,1')
             ->whereNumber('procedure')
             ->whereNumber('lot');
+
+        Route::post('/procedures/{procedure}/auction/presence/heartbeat', [AuctionPresenceController::class, 'heartbeat'])
+            ->middleware('throttle:60,1')
+            ->whereNumber('procedure');
+        Route::post('/procedures/{procedure}/auction/presence/leave', [AuctionPresenceController::class, 'leave'])
+            ->whereNumber('procedure');
     });
 
     Route::get('/admin/users', [UserController::class, 'index'])
@@ -260,6 +268,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('procedure')
         ->whereNumber('lot');
+
+    Route::get('/admin/procedures/{procedure}/auction/presence', [AdminAuctionPresenceController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure');
 
     // Фаза 5.4 — документы ТЗП
     Route::get('/admin/procedures/{procedure}/documents', [ProcedureDocumentController::class, 'index'])
