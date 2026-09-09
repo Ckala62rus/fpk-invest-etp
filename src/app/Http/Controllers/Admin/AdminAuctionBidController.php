@@ -47,6 +47,11 @@ class AdminAuctionBidController extends ApiController
             ->orderByDesc('id')
             ->get();
 
+        // Чтобы is_lot_winner считался без N+1: одна модель лота на все ставки
+        $bids->each(static function (AuctionBid $bid) use ($lotModel): void {
+            $bid->setRelation('lot', $lotModel);
+        });
+
         return $this->success(
             AdminAuctionBidResource::collection($bids)->resolve(),
             'Ставки лота.',

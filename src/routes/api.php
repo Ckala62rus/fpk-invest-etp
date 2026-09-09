@@ -45,6 +45,7 @@ use App\Http\Controllers\AuctionPresenceController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ParticipantAuctionLotController;
+use App\Http\Controllers\ParticipantMyAuctionController;
 use App\Http\Controllers\CorruptionReportController;
 use App\Http\Controllers\EvaluationSurveyController;
 use App\Http\Controllers\HealthController;
@@ -187,7 +188,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/proposals/{proposal}', [ProposalController::class, 'show'])
             ->whereNumber('proposal');
 
-        // Нужен, чтобы показать лоты аукциона без победителя и чужих ставок.
+        // Нужен, чтобы в кабинете показать список «мои аукционы» и признак победы.
+        Route::get('/me/auctions', [ParticipantMyAuctionController::class, 'index']);
+
+        // Нужен, чтобы показать лоты аукциона без чужих ставок (свой выигрыш — i_am_winner).
         Route::get('/procedures/{procedure}/lots', [ParticipantAuctionLotController::class, 'index'])
             ->whereNumber('procedure');
         // Нужен, чтобы показать только свои ставки по лоту.

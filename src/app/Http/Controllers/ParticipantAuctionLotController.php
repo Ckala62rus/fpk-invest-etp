@@ -15,7 +15,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 /**
  * Список лотов аукциона для участника (фаза 8.7).
  *
- * Без winner_user_id и без чужих ставок.
+ * Без чужих ставок и без чужих победителей; свой выигрыш — флаг i_am_winner.
  */
 class ParticipantAuctionLotController extends ApiController
 {
@@ -41,19 +41,36 @@ class ParticipantAuctionLotController extends ApiController
 
         $this->assertCanViewLots($procedure, $user);
 
+        $procedure->loadMissing('auctionSetting');
+
         $lots = $procedure->lots()
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
 
-        return $this->success(
-            ParticipantAuctionLotResource::collection($lots)->resolve(),
-            'Лоты аукциона.',
+        $iAmWinner = $lots->contains(
+            static fn ($lot): bool => (int) $lot->winner_user_id === (int) $user->id,
         );
+
+        // meta: фаза торгов + свой итог (без чужих победителей)
+        return response()->json([
+            'success' => true,
+            'message' => 'Лоты аукциона.',
+            'data' => ParticipantAuctionLotResource::collection($lots)->resolve(),
+            'meta' => [
+                'status' => $procedure->status?->value,
+                'status_label' => $procedure->status?->label(),
+                'auction_trade_status' => $procedure->auctionTradeStatus()?->value,
+                'auction_trade_status_label' => $procedure->auctionTradeStatusLabel(),
+                'is_paused' => (bool) $procedure->auctionSetting?->is_paused,
+                'ends_at' => $procedure->ends_at?->toIso8601String(),
+                'i_am_winner' => $iAmWinner,
+            ],
+        ]);
     }
 
     /**
-     * Открытый аукцион — любой участник; закрытый — только приглашённые/допущенные.
+     * Открытый аукцион — любой участник; закрытый — приглашённые / допущенные / победители.
      *
      * @param Procedure $procedure Аукцион
      * @param User $user Участник
@@ -72,6 +89,7 @@ class ParticipantAuctionLotController extends ApiController
             ->whereIn('status', [
                 ParticipantStatus::Invited,
                 ParticipantStatus::Admitted,
+                ParticipantStatus::Winner,
             ])
             ->exists();
 

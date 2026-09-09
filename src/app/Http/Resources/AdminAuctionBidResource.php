@@ -22,6 +22,9 @@ class AdminAuctionBidResource extends JsonResource
     {
         $user = $this->user;
 
+        $winnerUserId = $this->lot?->winner_user_id;
+        $isLotWinner = $winnerUserId !== null && (int) $winnerUserId === (int) $this->user_id;
+
         return [
             'id' => $this->id,
             'procedure_id' => $this->procedure_id,
@@ -36,6 +39,7 @@ class AdminAuctionBidResource extends JsonResource
             ],
             'amount' => $this->amount,
             'is_cancelled' => $this->is_cancelled,
+            'is_lot_winner' => $isLotWinner,
             'cancel_reason' => $this->cancel_reason,
             'cancelled_by' => $this->cancelled_by,
             'cancelled_at' => $this->cancelled_at?->toIso8601String(),

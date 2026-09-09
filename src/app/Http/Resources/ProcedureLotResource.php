@@ -31,6 +31,18 @@ class ProcedureLotResource extends JsonResource
             'bid_step' => $this->bid_step,
             'current_price' => $this->current_price,
             'winner_user_id' => $this->winner_user_id,
+            'winner' => $this->whenLoaded('winner', function () {
+                if ($this->winner === null) {
+                    return null;
+                }
+
+                return [
+                    'id' => $this->winner->id,
+                    'inn' => $this->winner->inn,
+                    'email' => $this->winner->email,
+                    'organization_name' => $this->winner->profile?->name,
+                ];
+            }),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ProcedureStatus;
+use App\Enums\ProcedureType;
 use App\Exceptions\DomainException;
 use App\Http\Controllers\ApiController;
 use App\Http\Requests\Api\Admin\StoreProcedureLotRequest;
@@ -35,6 +36,7 @@ class ProcedureLotController extends ApiController
         $this->assertCanAccess($procedure);
 
         $lots = $procedure->lots()
+            ->with('winner.profile')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -57,6 +59,7 @@ class ProcedureLotController extends ApiController
     public function store(StoreProcedureLotRequest $request, Procedure $procedure): JsonResponse
     {
         $this->assertCanAccess($procedure);
+        $this->assertAuction($procedure);
         $this->assertDraft($procedure);
 
         $data = $request->validated();
@@ -92,6 +95,7 @@ class ProcedureLotController extends ApiController
         int $lot,
     ): JsonResponse {
         $this->assertCanAccess($procedure);
+        $this->assertAuction($procedure);
         $this->assertDraft($procedure);
 
         $model = $this->findLotOrFail($procedure, $lot);
@@ -122,6 +126,7 @@ class ProcedureLotController extends ApiController
     public function destroy(Procedure $procedure, int $lot): JsonResponse
     {
         $this->assertCanAccess($procedure);
+        $this->assertAuction($procedure);
         $this->assertDraft($procedure);
 
         $model = $this->findLotOrFail($procedure, $lot);
@@ -151,6 +156,24 @@ class ProcedureLotController extends ApiController
         }
 
         return $lot;
+    }
+
+    /**
+     * Лоты относятся только к аукциону (ставки по лотам), не к запросу КП.
+     *
+     * @param Procedure $procedure Целевая ТЗП
+     * @return void
+     *
+     * @throws DomainException
+     */
+    private function assertAuction(Procedure $procedure): void
+    {
+        if ($procedure->type !== ProcedureType::Auction) {
+            throw new DomainException(
+                message: 'Лоты доступны только для торгово-закупочной процедуры типа «Электронный аукцион». Для запроса коммерческих предложений лоты не используются.',
+                statusCode: 422,
+            );
+        }
     }
 
     /**
