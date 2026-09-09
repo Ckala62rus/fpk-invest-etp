@@ -26,4 +26,13 @@ interface ActivityLogRepositoryInterface
      * @return ActivityLog|null Модель или null, если не найдена
      */
     public function findById(int $id): ?ActivityLog;
+
+    /**
+     * Выборка для экспорта (без пагинации, лимит).
+     *
+     * @param ActivityLogFilterDTO $filter Фильтры
+     * @param int $limit Максимум строк
+     * @return \Illuminate\Support\Collection<int, ActivityLog>
+     */
+    public function forExport(ActivityLogFilterDTO $filter, int $limit = 5000): \Illuminate\Support\Collection;
 }

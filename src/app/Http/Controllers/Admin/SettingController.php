@@ -40,6 +40,10 @@ class SettingController extends ApiController
                 2,
             ),
             'rfp_extension_days' => $this->settings->rfpExtensionDays(),
+            'proposal_retention_years' => $this->settings->getInt(
+                SettingsService::PROPOSAL_RETENTION_YEARS,
+                5,
+            ),
         ], 'Настройки площадки.');
     }
 
@@ -58,6 +62,7 @@ class SettingController extends ApiController
         $data = $request->validate([
             'doc_edit_deadline_days' => ['sometimes', 'integer', 'min:0', 'max:30'],
             'rfp_extension_days' => ['sometimes', 'integer', 'min:1', 'max:30'],
+            'proposal_retention_years' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ], [
             'doc_edit_deadline_days.integer' => 'Срок редактирования документов должен быть числом.',
             'doc_edit_deadline_days.min' => 'Срок редактирования не может быть отрицательным.',
@@ -65,6 +70,9 @@ class SettingController extends ApiController
             'rfp_extension_days.integer' => 'Срок продления приёма КП должен быть числом.',
             'rfp_extension_days.min' => 'Срок продления должен быть не менее :min дня.',
             'rfp_extension_days.max' => 'Срок продления не должен превышать :max дней.',
+            'proposal_retention_years.integer' => 'Срок хранения КП должен быть числом.',
+            'proposal_retention_years.min' => 'Срок хранения должен быть не менее :min года.',
+            'proposal_retention_years.max' => 'Срок хранения не должен превышать :max лет.',
         ]);
 
         /** @var User $user */
@@ -86,12 +94,24 @@ class SettingController extends ApiController
             );
         }
 
+        if (array_key_exists('proposal_retention_years', $data)) {
+            $this->settings->setDays(
+                SettingsService::PROPOSAL_RETENTION_YEARS,
+                (int) $data['proposal_retention_years'],
+                $user->id,
+            );
+        }
+
         return $this->success([
             'doc_edit_deadline_days' => $this->settings->getInt(
                 SettingsService::DOC_EDIT_DEADLINE_DAYS,
                 2,
             ),
             'rfp_extension_days' => $this->settings->rfpExtensionDays(),
+            'proposal_retention_years' => $this->settings->getInt(
+                SettingsService::PROPOSAL_RETENTION_YEARS,
+                5,
+            ),
         ], 'Настройки обновлены.');
     }
 

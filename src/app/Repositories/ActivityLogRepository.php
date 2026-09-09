@@ -58,6 +58,20 @@ class ActivityLogRepository implements ActivityLogRepositoryInterface
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function forExport(ActivityLogFilterDTO $filter, int $limit = 5000): \Illuminate\Support\Collection
+    {
+        $query = ActivityLog::query()
+            ->with(['causer'])
+            ->orderByDesc('id');
+
+        $this->applyFilters($query, $filter);
+
+        return $query->limit($limit)->get();
+    }
+
+    /**
      * Применяет фильтры к запросу журнала.
      *
      * @param Builder<ActivityLog> $query Базовый запрос

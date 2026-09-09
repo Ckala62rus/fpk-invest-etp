@@ -14,6 +14,8 @@ class SettingsService
 
     public const RFP_EXTENSION_DAYS = 'rfp_extension_days';
 
+    public const PROPOSAL_RETENTION_YEARS = 'proposal_retention_years';
+
     /**
      * Читает целочисленную настройку.
      *
