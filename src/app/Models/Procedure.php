@@ -204,6 +204,22 @@ class Procedure extends Model
     }
 
     /**
+     * Опросы качества после завершения закупки (фаза 9).
+     */
+    public function evaluationSurveys(): HasMany
+    {
+        return $this->hasMany(EvaluationSurvey::class);
+    }
+
+    /**
+     * PDF-протоколы аукциона (фаза 8.11).
+     */
+    public function auctionProtocols(): HasMany
+    {
+        return $this->hasMany(AuctionProtocol::class);
+    }
+
+    /**
      * Настраиваемые поля формы заявки или карточки процедуры.
      *
      * Администратор задаёт дополнительные поля, которые участник заполняет при подаче КП.
@@ -281,15 +297,5 @@ class Procedure extends Model
     public function auctionSessions(): HasMany
     {
         return $this->hasMany(AuctionSession::class);
-    }
-
-    /**
-     * Сгенерированные PDF-протоколы по результатам аукциона.
-     *
-     * Хранит ссылки на файлы протоколов для скачивания после завершения торгов.
-     */
-    public function auctionProtocols(): HasMany
-    {
-        return $this->hasMany(AuctionProtocol::class);
     }
 }

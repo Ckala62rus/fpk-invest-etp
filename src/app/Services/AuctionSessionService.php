@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Actions\Auction\DetermineWinnersAction;
 use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureType;
+use App\Events\AuctionStateChanged;
 use App\Exceptions\DomainException;
+use App\Jobs\GenerateAuctionProtocolJob;
 use App\Models\AuctionSetting;
 use App\Models\Procedure;
 use App\Models\User;
@@ -13,10 +16,19 @@ use Illuminate\Support\Facades\DB;
 /**
  * Жизненный цикл торгов аукциона: start / pause / resume / finish (фаза 8.2).
  *
+ * После финиша назначает победителей (фаза 8.10) и шлёт AuctionStateChanged (фаза 8.9).
  * Не путать с моделью AuctionSession (presence онлайн-участников, фаза 8.8).
  */
 class AuctionSessionService
 {
+    /**
+     * @param DetermineWinnersAction $winners Назначение победителей при завершении
+     * @return void
+     */
+    public function __construct(
+        private readonly DetermineWinnersAction $winners,
+    ) {
+    }
     /**
      * Запускает торги: auction_pending → in_progress.
      *
@@ -46,7 +58,7 @@ class AuctionSessionService
             );
         }
 
-        return DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
+        $started = DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
             $procedure->update([
                 'status' => ProcedureStatus::InProgress,
                 'starts_at' => $procedure->starts_at ?? now(),
@@ -65,6 +77,10 @@ class AuctionSessionService
 
             return $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
         });
+
+        event(AuctionStateChanged::fromProcedure($started, 'start'));
+
+        return $started;
     }
 
     /**
@@ -90,7 +106,7 @@ class AuctionSessionService
             );
         }
 
-        return DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
+        $paused = DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
             $settings->update([
                 'is_paused' => true,
                 'paused_at' => now(),
@@ -104,6 +120,10 @@ class AuctionSessionService
 
             return $procedure->fresh(['auctionSetting']) ?? $procedure;
         });
+
+        event(AuctionStateChanged::fromProcedure($paused, 'pause'));
+
+        return $paused;
     }
 
     /**
@@ -129,7 +149,7 @@ class AuctionSessionService
             );
         }
 
-        return DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
+        $resumed = DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
             $settings->update([
                 'is_paused' => false,
                 'paused_at' => null,
@@ -143,6 +163,10 @@ class AuctionSessionService
 
             return $procedure->fresh(['auctionSetting']) ?? $procedure;
         });
+
+        event(AuctionStateChanged::fromProcedure($resumed, 'resume'));
+
+        return $resumed;
     }
 
     /**
@@ -161,7 +185,7 @@ class AuctionSessionService
 
         $settings = $this->requireSettings($procedure);
 
-        return DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
+        $finished = DB::transaction(function () use ($procedure, $actor, $settings): Procedure {
             $procedure->update([
                 'status' => ProcedureStatus::Completed,
                 'completed_at' => now(),
@@ -178,8 +202,16 @@ class AuctionSessionService
                 ->event('auction_finished')
                 ->log('Аукцион завершён');
 
-            return $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
+            $fresh = $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
+            $this->winners->execute($fresh);
+
+            return $fresh->fresh(['auctionSetting', 'lots']) ?? $fresh;
         });
+
+        event(AuctionStateChanged::fromProcedure($finished, 'finish'));
+        GenerateAuctionProtocolJob::dispatch($finished->id, $actor->id);
+
+        return $finished;
     }
 
     /**
@@ -202,7 +234,7 @@ class AuctionSessionService
 
         $settings = $this->requireSettings($procedure);
 
-        return DB::transaction(function () use ($procedure, $settings, $event, $logMessage): Procedure {
+        $finished = DB::transaction(function () use ($procedure, $settings, $event, $logMessage): Procedure {
             $procedure->update([
                 'status' => ProcedureStatus::Completed,
                 'completed_at' => now(),
@@ -218,8 +250,16 @@ class AuctionSessionService
                 ->event($event)
                 ->log($logMessage);
 
-            return $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
+            $fresh = $procedure->fresh(['auctionSetting', 'lots']) ?? $procedure;
+            $this->winners->execute($fresh);
+
+            return $fresh->fresh(['auctionSetting', 'lots']) ?? $fresh;
         });
+
+        event(AuctionStateChanged::fromProcedure($finished, 'finish'));
+        GenerateAuctionProtocolJob::dispatch($finished->id, null);
+
+        return $finished;
     }
 
     /**

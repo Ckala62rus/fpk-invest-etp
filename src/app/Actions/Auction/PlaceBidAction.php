@@ -7,6 +7,8 @@ use App\Enums\BidMode;
 use App\Enums\ParticipantStatus;
 use App\Enums\ProcedureVisibility;
 use App\Enums\ProposalStatus;
+use App\Events\AuctionExtended;
+use App\Events\BidPlaced;
 use App\Exceptions\DomainException;
 use App\Models\AuctionBid;
 use App\Models\Procedure;
@@ -71,7 +73,9 @@ class PlaceBidAction
 
         $this->assertParticipantAllowed($procedure, $participant);
 
-        return DB::transaction(function () use ($procedure, $lot, $participant, $amount, $ipAddress): AuctionBid {
+        $extendedUntil = null;
+
+        $bid = DB::transaction(function () use ($procedure, $lot, $participant, $amount, $ipAddress, &$extendedUntil): AuctionBid {
             $lockedProcedure = Procedure::query()
                 ->whereKey($procedure->id)
                 ->lockForUpdate()
@@ -127,7 +131,7 @@ class PlaceBidAction
 
             $lockedLot->update(['current_price' => $amount]);
 
-            $this->timer->extendIfNeeded($lockedProcedure, $settings);
+            $extendedUntil = $this->timer->extendIfNeeded($lockedProcedure, $settings);
 
             activity('auction_bid')
                 ->causedBy($participant)
@@ -142,6 +146,22 @@ class PlaceBidAction
 
             return $bid->fresh(['lot', 'procedure']) ?? $bid;
         });
+
+        $procedureFresh = $bid->procedure ?? $procedure->fresh(['auctionSetting']);
+        $procedureFresh?->loadMissing('auctionSetting');
+
+        // WebSocket-тикер без ФИО/email автора ставки (фаза 8.9)
+        event(BidPlaced::fromBid($bid, $procedureFresh ?? $procedure));
+
+        if ($extendedUntil !== null) {
+            event(new AuctionExtended(
+                $bid->procedure_id,
+                $extendedUntil->toIso8601String(),
+                (int) ($procedureFresh?->auctionSetting?->extension_minutes ?? 5),
+            ));
+        }
+
+        return $bid;
     }
 
     /**

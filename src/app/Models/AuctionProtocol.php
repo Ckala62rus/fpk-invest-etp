@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Сгенерированный PDF-протокол аукциона.
+ * PDF-протокол итогов аукциона (фаза 8.11).
  *
- * @property int $id Идентификатор
- * @property int $procedure_id Процедура-аукцион
- * @property string $file_path Путь к PDF-протоколу
- * @property int $generated_by Кто сформировал
- * @property \Illuminate\Support\Carbon $generated_at Дата формирования
- * @property int $template_version Версия шаблона протокола
+ * @property int $id
+ * @property int $procedure_id
+ * @property string $file_path
+ * @property int|null $generated_by
+ * @property \Illuminate\Support\Carbon $generated_at
+ * @property int $template_version
  */
 class AuctionProtocol extends Model
 {
@@ -28,8 +28,6 @@ class AuctionProtocol extends Model
     ];
 
     /**
-     * Преобразование атрибутов протокола аукциона в типы PHP.
-     *
      * @return array<string, string>
      */
     protected function casts(): array
@@ -41,9 +39,9 @@ class AuctionProtocol extends Model
     }
 
     /**
-     * Процедура-аукцион, для которой сформирован протокол.
+     * Аукцион, по которому сформирован протокол.
      *
-     * Нужен для скачивания протокола из карточки процедуры и публикации на публичной странице.
+     * @return BelongsTo<Procedure, $this>
      */
     public function procedure(): BelongsTo
     {
@@ -51,11 +49,11 @@ class AuctionProtocol extends Model
     }
 
     /**
-     * Администратор, сформировавший PDF-протокол аукциона.
+     * Администратор, инициировавший генерацию (null при автофинише).
      *
-     * Используется для аудита формирования протоколов и отображения ответственного лица.
+     * @return BelongsTo<User, $this>
      */
-    public function generatedByUser(): BelongsTo
+    public function generatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'generated_by');
     }

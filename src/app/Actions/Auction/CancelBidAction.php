@@ -108,10 +108,10 @@ class CancelBidAction
                 ])
                 ->log('Ставка отменена администратором');
 
-            return $lockedBid->refresh();
+            return $lockedBid->refresh()->load('lot');
         });
 
-        BidCancelled::dispatch($cancelled);
+        event(new BidCancelled($cancelled));
 
         return $cancelled;
     }
