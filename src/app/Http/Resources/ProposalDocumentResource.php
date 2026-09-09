@@ -24,7 +24,6 @@ class ProposalDocumentResource extends JsonResource
             'id' => $this->id,
             'proposal_id' => $this->proposal_id,
             'file_name' => $this->file_name,
-            'file_path' => $this->file_path,
             'type' => $this->type,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

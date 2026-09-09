@@ -79,7 +79,29 @@ class LoginTest extends TestCase
 
         $this->withSanctumCsrf()
             ->postJson('/api/auth/login', ['inn' => $user->inn, 'password' => 'password'])
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertJsonPath(
+                'message',
+                'Сначала подтвердите email по ссылке из письма. После этого администратор одобрит доступ.',
+            );
+    }
+
+    /**
+     * Проверяет запрет входа до одобрения администратором (после подтверждения email).
+     *
+     * @return void
+     */
+    public function test_pending_approval_user_cannot_log_in(): void
+    {
+        $user = User::factory()->pendingApproval()->create();
+
+        $this->withSanctumCsrf()
+            ->postJson('/api/auth/login', ['inn' => $user->inn, 'password' => 'password'])
+            ->assertForbidden()
+            ->assertJsonPath(
+                'message',
+                'Учётные данные верны. Доступ появится после одобрения администратором площадки.',
+            );
     }
 
     /**
@@ -93,6 +115,10 @@ class LoginTest extends TestCase
 
         $this->withSanctumCsrf()
             ->postJson('/api/auth/login', ['inn' => $user->inn, 'password' => 'password'])
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertJsonPath(
+                'message',
+                'Учётная запись заблокирована. Обратитесь к администратору ЭТП.',
+            );
     }
 }

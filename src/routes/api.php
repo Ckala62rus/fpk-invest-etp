@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminAuctionBidController;
 use App\Http\Controllers\Admin\AdminAuctionPresenceController;
 use App\Http\Controllers\Admin\AdminProposalController;
+use App\Http\Controllers\Admin\AdminProposalDocumentController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ActivityLogExportController;
 use App\Http\Controllers\Admin\AuctionBidCancelController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Admin\ProposalAdmissionController;
 use App\Http\Controllers\Admin\ProposalMessageController as AdminProposalMessageController;
 use App\Http\Controllers\Admin\ReportTemplateController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AdminUserDocumentController;
 use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -40,6 +42,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\AuctionBidController;
 use App\Http\Controllers\AuctionPresenceController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ParticipantAuctionLotController;
 use App\Http\Controllers\CorruptionReportController;
@@ -156,6 +159,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->whereNumber('procedure');
 
     Route::middleware('role:participant')->group(function (): void {
+        // Нужен, чтобы участник увидел список своих КП без знания ID.
+        Route::get('/proposals', [ProposalController::class, 'index']);
         // Нужен, чтобы участник увидел файлы своего КП (коммерческого предложения).
         Route::get('/proposals/{proposal}/documents', [ProposalDocumentController::class, 'index'])
             ->whereNumber('proposal');
@@ -219,6 +224,15 @@ Route::middleware('auth:sanctum')->group(function (): void {
     // Нужен, чтобы назначить роли RBAC (role-based access control).
     Route::put('/admin/users/{user}/roles', [UserController::class, 'assignRoles'])
         ->middleware('role:super_admin');
+    // Нужен, чтобы админ увидел документы организации из профиля участника (устав и т.п.).
+    Route::get('/admin/users/{user}/documents', [AdminUserDocumentController::class, 'index'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('user');
+    // Нужен, чтобы админ скачал / открыл документ профиля участника (?inline=1 для PDF).
+    Route::get('/admin/users/{user}/documents/{document}/download', [AdminUserDocumentController::class, 'download'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('user')
+        ->whereNumber('document');
     // Нужен, чтобы смотреть журнал действий.
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor');
@@ -457,6 +471,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:super_admin|trade_admin|auditor')
         ->whereNumber('procedure')
         ->whereNumber('proposal');
+    // Нужен, чтобы скачать или открыть PDF документа КП после дедлайна приёма.
+    Route::get('/admin/procedures/{procedure}/proposals/{proposal}/documents/{document}/download', [AdminProposalDocumentController::class, 'download'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('procedure')
+        ->whereNumber('proposal')
+        ->whereNumber('document');
 
     // Нужен, чтобы открыть переписку по КП со стороны админки.
     Route::get('/admin/procedures/{procedure}/proposals/{proposal}/messages', [AdminProposalMessageController::class, 'index'])
@@ -586,7 +606,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/subscriptions', [SubscriptionController::class, 'show']);
     // Нужен, чтобы сохранить подписки для писем о новых ТЗП.
     Route::put('/subscriptions', [SubscriptionController::class, 'update']);
-    // Нужен, чтобы показать, какие email-уведомления включены.
+    // Нужен, чтобы участник выбрал категории для подписок (без ID вручную).
+    Route::get('/catalog/categories', [CatalogController::class, 'categories']);
+    // Нужен, чтобы участник выбрал группы компаний для подписок.
+    Route::get('/catalog/company-groups', [CatalogController::class, 'companyGroups']);
+    // Нужен, чтобы показать, какие email-оповещения включены.
     Route::get('/notification-settings', [UserNotificationSettingController::class, 'show']);
     // Нужен, чтобы включить или выключить типы писем.
     Route::put('/notification-settings', [UserNotificationSettingController::class, 'update']);
@@ -595,6 +619,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/profile', [ProfileController::class, 'show']);
     // Нужен, чтобы обновить ФИО, телефон и организацию в профиле.
     Route::put('/profile', [ProfileController::class, 'update']);
+    // Нужен, чтобы показать загруженные документы профиля.
+    Route::get('/profile/documents', [UserDocumentController::class, 'index']);
     // Нужен, чтобы загрузить документ к профилю.
     Route::post('/profile/documents', [UserDocumentController::class, 'store']);
+    // Нужен, чтобы участник скачал / открыл свой документ профиля (?inline=1 для PDF).
+    Route::get('/profile/documents/{document}/download', [UserDocumentController::class, 'download'])
+        ->whereNumber('document');
 });

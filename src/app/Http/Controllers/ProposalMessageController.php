@@ -32,7 +32,7 @@ class ProposalMessageController extends ApiController
         $this->assertParticipantOwner($proposal);
 
         $messages = $proposal->messages()
-            ->with('sender:id,inn,email')
+            ->with('sender.profile')
             ->orderBy('id')
             ->get();
 

@@ -12,6 +12,7 @@ use App\Enums\ProcedureVisibility;
 use App\Enums\ProposalStatus;
 use App\Enums\UserStatus;
 use App\Exceptions\DomainException;
+use App\Jobs\SendProposalSubmittedMailJob;
 use App\Models\ProcedureCustomField;
 use App\Models\Proposal;
 use App\Models\ProposalFieldValue;
@@ -49,7 +50,7 @@ class SubmitProposalAction
             $dto->fieldValues,
         );
 
-        return DB::transaction(function () use ($dto, $normalizedValues): Proposal {
+        $proposal = DB::transaction(function () use ($dto, $normalizedValues): Proposal {
             $now = now();
 
             $proposal = Proposal::query()->create([
@@ -82,6 +83,10 @@ class SubmitProposalAction
 
             return $proposal->fresh(['fieldValues.customField']) ?? $proposal;
         });
+
+        SendProposalSubmittedMailJob::dispatch($proposal->id);
+
+        return $proposal;
     }
 
     /**

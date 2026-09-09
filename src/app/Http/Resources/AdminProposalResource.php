@@ -25,9 +25,12 @@ class AdminProposalResource extends JsonResource
         $visibility = app(ProposalVisibilityService::class);
         $full = $visibility->canViewFullContent($request->user(), $this->resource);
 
+        // user_id всегда — чтобы из списка КП открыть профиль и документы организации.
         $base = [
             'id' => $this->id,
             'procedure_id' => $this->procedure_id,
+            'user_id' => $this->user_id,
+            'participant_name' => $this->resolveParticipantName(),
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'submitted_at' => $this->submitted_at?->toIso8601String(),
@@ -36,15 +39,12 @@ class AdminProposalResource extends JsonResource
 
         if (! $full) {
             return array_merge($base, [
-                'participant_name' => $this->resolveParticipantName(),
                 'content_hidden' => true,
                 'content_available_after' => $this->procedure?->ends_at?->toIso8601String(),
             ]);
         }
 
         return array_merge($base, [
-            'user_id' => $this->user_id,
-            'participant_name' => $this->resolveParticipantName(),
             'contract_form_agreed_at' => $this->contract_form_agreed_at?->toIso8601String(),
             'parent_proposal_id' => $this->parent_proposal_id,
             'field_values' => ProposalFieldValueResource::collection(

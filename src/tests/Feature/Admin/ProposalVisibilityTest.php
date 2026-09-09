@@ -33,11 +33,11 @@ class ProposalVisibilityTest extends TestCase
     }
 
     /**
-     * До дедлайна админ видит только имя участника, без field_values.
+     * До дедлайна админ уже видит полное КП (нужно для рассмотрения и допуска).
      *
      * @return void
      */
-    public function test_admin_sees_only_participant_name_before_deadline(): void
+    public function test_admin_sees_full_proposal_before_deadline(): void
     {
         /** @var User&Authenticatable $admin */
         $admin = User::factory()->create();
@@ -82,8 +82,9 @@ class ProposalVisibilityTest extends TestCase
             ->getJson('/api/admin/procedures/'.$procedure->id.'/proposals/'.$proposal->id)
             ->assertOk()
             ->assertJsonPath('data.participant_name', 'ООО Ромашка')
-            ->assertJsonPath('data.content_hidden', true)
-            ->assertJsonMissingPath('data.field_values');
+            ->assertJsonPath('data.content_hidden', false)
+            ->assertJsonPath('data.user_id', $participant->id)
+            ->assertJsonPath('data.field_values.0.value', '999999');
     }
 
     /**
@@ -159,11 +160,11 @@ class ProposalVisibilityTest extends TestCase
     }
 
     /**
-     * Список заявок до дедлайна маскирует содержимое.
+     * Список заявок до дедлайна отдаёт полное содержимое (для рассмотрения).
      *
      * @return void
      */
-    public function test_proposal_list_masks_content_before_deadline(): void
+    public function test_proposal_list_shows_full_content_before_deadline(): void
     {
         /** @var User&Authenticatable $admin */
         $admin = User::factory()->create();
@@ -178,7 +179,6 @@ class ProposalVisibilityTest extends TestCase
         $this->actingAs($admin)
             ->getJson('/api/admin/procedures/'.$procedure->id.'/proposals')
             ->assertOk()
-            ->assertJsonPath('data.0.content_hidden', true)
-            ->assertJsonMissingPath('data.0.field_values');
+            ->assertJsonPath('data.0.content_hidden', false);
     }
 }

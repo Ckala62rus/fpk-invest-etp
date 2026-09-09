@@ -95,6 +95,13 @@ class NotificationTemplateSeeder extends Seeder
                 'body_html' => '<p>Вас приглашают принять участие в процедуре {{procedure.number}}: {{procedure.title}}.</p>',
                 'event_type' => NotificationEventType::Event,
             ],
+            [
+                'code' => NotificationTemplateCode::ProposalSubmitted,
+                'name' => 'Новое коммерческое предложение',
+                'subject' => 'Новое КП #{{proposal.id}} по {{procedure.number}}',
+                'body_html' => '<p>Участник {{participant.name}} (ИНН {{participant.inn}}) подал КП #{{proposal.id}} по процедуре <strong>{{procedure.number}}</strong>: {{procedure.title}}.</p><p>Email участника: {{participant.email}}</p>',
+                'event_type' => NotificationEventType::Event,
+            ],
         ];
 
         foreach ($templates as $template) {

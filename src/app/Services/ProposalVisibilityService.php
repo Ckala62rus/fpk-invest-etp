@@ -6,9 +6,10 @@ use App\Models\Proposal;
 use App\Models\User;
 
 /**
- * Правила видимости содержимого КП до/после дедлайна (фаза 6.5).
+ * Правила видимости содержимого КП (фаза 6.5).
  *
- * До ends_at админ видит только наименование участника; после — полное КП.
+ * Администраторы площадки видят полное КП (поля и документы) сразу после подачи —
+ * иначе нельзя рассмотреть заявку и вынести решение о допуске до дедлайна.
  * Участник всегда видит только своё предложение целиком.
  */
 class ProposalVisibilityService
@@ -43,11 +44,8 @@ class ProposalVisibilityService
             return true;
         }
 
-        if (! $this->canAccessAsAdmin($user, $proposal)) {
-            return false;
-        }
-
-        return $this->isDeadlinePassed($proposal);
+        // Админ / аудитор / ответственный trade_admin — полное КП до дедлайна
+        return $this->canAccessAsAdmin($user, $proposal);
     }
 
     /**

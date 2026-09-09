@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\ApiController;
 use App\Http\Resources\UserDocumentResource;
+use App\Models\User;
 use App\Models\UserDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,75 +13,51 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Список, загрузка и скачивание документов профиля участника.
+ * Просмотр и скачивание документов профиля участника администратором.
+ *
+ * Нужен, чтобы при модерации или разборе КП (коммерческого предложения)
+ * открыть учредительные/регистрационные файлы организации без входа под участником.
  */
-class UserDocumentController extends ApiController
+class AdminUserDocumentController extends ApiController
 {
     /**
-     * Список документов текущего пользователя.
+     * Список документов профиля выбранного пользователя.
      *
-     * @param Request $request Текущий запрос
+     * @param User $user Участник (или другой пользователь ЭТП)
      * @return JsonResponse
      */
-    public function index(Request $request): JsonResponse
+    public function index(User $user): JsonResponse
     {
         $documents = UserDocument::query()
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->orderByDesc('id')
             ->get();
 
         return $this->success(
             UserDocumentResource::collection($documents)->resolve(),
-            'Документы профиля.',
+            'Документы профиля пользователя.',
         );
     }
 
     /**
-     * Сохраняет документ текущего пользователя на локальном закрытом диске.
+     * Скачивает или открывает (inline) документ профиля участника.
      *
-     * @param \App\Http\Requests\Api\StoreUserDocumentRequest $request Проверенный запрос с файлом
-     * @return JsonResponse
-     */
-    public function store(\App\Http\Requests\Api\StoreUserDocumentRequest $request): JsonResponse
-    {
-        $file = $request->file('document');
-        $user = $request->user();
-        $path = $file->store("user_documents/{$user->id}", 'local');
-
-        $document = UserDocument::query()->create([
-            'user_id' => $user->id,
-            'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'valid_until' => now()->addYear(),
-            'uploaded_at' => now(),
-        ]);
-
-        return $this->created(
-            (new UserDocumentResource($document))->resolve(),
-            'Документ загружен.',
-        );
-    }
-
-    /**
-     * Скачивает или открывает свой документ профиля (?inline=1 для PDF).
-     *
-     * @param Request $request HTTP-запрос
-     * @param int $document ID user_documents
+     * @param Request $request HTTP-запрос (?inline=1 — просмотр PDF в браузере)
+     * @param User $user Владелец документа
+     * @param int $document ID записи user_documents
      * @return StreamedResponse
      *
-     * @throws NotFoundHttpException Если документ чужой или файла нет на диске
+     * @throws NotFoundHttpException Если документ чужой или файл отсутствует на диске
      */
-    public function download(Request $request, int $document): StreamedResponse
+    public function download(Request $request, User $user, int $document): StreamedResponse
     {
         $model = UserDocument::query()
             ->whereKey($document)
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->first();
 
         if ($model === null) {
-            throw new NotFoundHttpException('Документ не найден.');
+            throw new NotFoundHttpException('Документ пользователя не найден.');
         }
 
         if (! Storage::disk('local')->exists($model->file_path)) {

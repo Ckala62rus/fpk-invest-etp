@@ -21,6 +21,28 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 class ProposalController extends ApiController
 {
     /**
+     * Список своих коммерческих предложений участника.
+     *
+     * @return JsonResponse
+     */
+    public function index(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        $proposals = Proposal::query()
+            ->where('user_id', $user->id)
+            ->with(['procedure', 'admissionDecision'])
+            ->orderByDesc('id')
+            ->get();
+
+        return $this->success(
+            ProposalResource::collection($proposals)->resolve(),
+            'Ваши коммерческие предложения.',
+        );
+    }
+
+    /**
      * Подаёт коммерческое предложение по запросу предложений.
      *
      * @param SubmitProposalRequest $request Валидированные данные КП

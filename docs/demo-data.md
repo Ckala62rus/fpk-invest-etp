@@ -120,5 +120,5 @@ Invoke-RestMethod http://localhost:8200/api/procedures
 
 Письма регистрации и уведомлений — в MailHog.
 
-Пошаговый сценарий SPA (два браузера, аукцион, аудит): в монорепо  
-`documentation/agent-notes/13-portal-user-guide.md` (не в этом git-репозитории).
+Пошаговый сценарий SPA (КП, лоты, поля, приглашения, аукцион, аудит):  
+[`docs/portal-user-guide.md`](./portal-user-guide.md).

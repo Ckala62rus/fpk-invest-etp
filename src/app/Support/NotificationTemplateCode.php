@@ -29,6 +29,8 @@ final class NotificationTemplateCode
 
     public const ExternalProcedureInvite = 'external_procedure_invite';
 
+    public const ProposalSubmitted = 'proposal_submitted';
+
     /**
      * @return list<string>
      */
@@ -46,6 +48,7 @@ final class NotificationTemplateCode
             self::EvaluationSurvey,
             self::EvaluationSurveyReminder,
             self::ExternalProcedureInvite,
+            self::ProposalSubmitted,
         ];
     }
 }

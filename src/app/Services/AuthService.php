@@ -40,7 +40,7 @@ class AuthService implements AuthServiceInterface
 
         if ($user->status !== UserStatus::Active) {
             throw new DomainException(
-                message: 'Вход доступен только для активной учётной записи.',
+                message: $this->inactiveAccountMessage($user->status),
                 statusCode: 403,
             );
         }
@@ -49,5 +49,21 @@ class AuthService implements AuthServiceInterface
         $user->update(['failed_login_attempts' => 0]);
 
         return $user;
+    }
+
+    /**
+     * Текст отказа во входе по статусу учётной записи (для UI участника).
+     *
+     * @param UserStatus $status Текущий статус
+     * @return string Сообщение на русском
+     */
+    private function inactiveAccountMessage(UserStatus $status): string
+    {
+        return match ($status) {
+            UserStatus::PendingEmail => 'Сначала подтвердите email по ссылке из письма. После этого администратор одобрит доступ.',
+            UserStatus::PendingApproval => 'Учётные данные верны. Доступ появится после одобрения администратором площадки.',
+            UserStatus::Blocked => 'Учётная запись заблокирована. Обратитесь к администратору ЭТП.',
+            default => 'Вход доступен только для активной учётной записи.',
+        };
     }
 }

@@ -37,7 +37,7 @@ class ProposalMessageController extends ApiController
         $model = $this->findProposalOrFail($procedure, $proposal);
 
         $messages = $model->messages()
-            ->with('sender:id,inn,email')
+            ->with('sender.profile')
             ->orderBy('id')
             ->get();
 

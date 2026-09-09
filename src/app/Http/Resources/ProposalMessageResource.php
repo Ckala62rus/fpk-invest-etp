@@ -24,11 +24,16 @@ class ProposalMessageResource extends JsonResource
             'id' => $this->id,
             'proposal_id' => $this->proposal_id,
             'sender_id' => $this->sender_id,
+            'is_mine' => $request->user() !== null
+                && (int) $this->sender_id === (int) $request->user()->id,
             'sender' => $this->whenLoaded('sender', function () {
                 return [
                     'id' => $this->sender->id,
                     'inn' => $this->sender->inn,
                     'email' => $this->sender->email,
+                    'name' => $this->sender->profile?->name
+                        ?? $this->sender->email
+                        ?? $this->sender->inn,
                 ];
             }),
             'message' => $this->message,

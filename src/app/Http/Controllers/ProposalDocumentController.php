@@ -92,7 +92,50 @@ class ProposalDocumentController extends ApiController
             throw new NotFoundHttpException('Файл документа не найден на диске.');
         }
 
+        $inline = request()->boolean('inline');
+        $mime = $this->guessMime($model->file_name);
+
+        if ($inline) {
+            return Storage::disk('local')->response(
+                $model->file_path,
+                $model->file_name,
+                [
+                    'Content-Type' => $mime,
+                    'Content-Disposition' => 'inline; filename="'.$this->safeFilename($model->file_name).'"',
+                ],
+            );
+        }
+
         return Storage::disk('local')->download($model->file_path, $model->file_name);
+    }
+
+    /**
+     * @param string $fileName Имя файла
+     * @return string MIME
+     */
+    private function guessMime(string $fileName): string
+    {
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        return match ($ext) {
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'application/octet-stream',
+        };
+    }
+
+    /**
+     * @param string $fileName Имя файла
+     * @return string
+     */
+    private function safeFilename(string $fileName): string
+    {
+        return str_replace(['"', "\r", "\n"], '', $fileName);
     }
 
     /**

@@ -30,6 +30,15 @@ class ProposalResource extends JsonResource
             'contract_form_agreed_at' => $this->contract_form_agreed_at?->toIso8601String(),
             'version' => $this->version,
             'parent_proposal_id' => $this->parent_proposal_id,
+            'procedure' => $this->whenLoaded('procedure', function () {
+                return [
+                    'id' => $this->procedure->id,
+                    'number' => $this->procedure->number,
+                    'title' => $this->procedure->title,
+                    'type' => $this->procedure->type?->value,
+                    'type_label' => $this->procedure->type?->label(),
+                ];
+            }),
             'field_values' => ProposalFieldValueResource::collection(
                 $this->whenLoaded('fieldValues')
             ),
