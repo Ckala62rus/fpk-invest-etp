@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             NotificationTemplateSeeder::class,
             SuperAdminSeeder::class,
+            DemoUsersSeeder::class,
+            DemoCatalogSeeder::class,
+            DemoProceduresSeeder::class,
+            DemoCmsSeeder::class,
         ]);
     }
 }
