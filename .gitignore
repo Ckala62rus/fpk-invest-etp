@@ -1,3 +1,10 @@
 .env
 .idea/
+backups/
+
+
+# Laravel IDE Helper
+src/_ide_helper.php
+src/_ide_helper_models.php
+src/.phpstorm.meta.php
 

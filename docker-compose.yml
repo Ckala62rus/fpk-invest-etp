@@ -25,6 +25,7 @@ services:
       PHP_IDE_CONFIG: ${PHP_IDE_CONFIG:-serverName=etp}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
     networks:
       - etp
 
@@ -32,7 +33,7 @@ services:
     image: nginx:1.27-alpine
     container_name: nginx-etp
     ports:
-      - "${NGINX_PORT:-8080}:80"
+      - "${NGINX_PORT:-8200}:80"
     volumes:
       - ./docker/nginx/config/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/nginx/config/conf.d:/etc/nginx/conf.d
@@ -45,6 +46,7 @@ services:
       - backend-etp
     environment:
       NGINX_UPSTREAM: backend-etp:9000
+    restart: unless-stopped
     networks:
       - etp
 
@@ -67,6 +69,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
     networks:
       - etp
 
@@ -78,6 +81,7 @@ services:
     volumes:
       - ./docker/redis/data:/data
     command: ["redis-server", "--appendonly", "yes"]
+    restart: unless-stopped
     networks:
       - etp
 
@@ -93,9 +97,90 @@ services:
     networks:
       - etp
 
+  # Планировщик Laravel: письма аукциона, опросы, автофиниш, очистка КП (фаза 12.3)
+  scheduler-etp:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: scheduler-etp
+    working_dir: /var/www
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      postgres-etp:
+        condition: service_healthy
+      redis-etp:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      XDEBUG_MODE: "off"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - etp
+
+  # Очередь Horizon (фаза 12.1). UI: http://localhost:8200/horizon
+  horizon-etp:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: horizon-etp
+    working_dir: /var/www
+    command: ["php", "artisan", "horizon"]
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      postgres-etp:
+        condition: service_healthy
+      redis-etp:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      XDEBUG_MODE: "off"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - etp
+
+  # WebSocket Laravel Reverb (фаза 12.2). Nginx API на 8200. SPA Echo: localhost:6001
+  reverb-etp:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: reverb-etp
+    working_dir: /var/www
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
+    ports:
+      - "${REVERB_PORT:-6001}:6001"
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      redis-etp:
+        condition: service_started
+      backend-etp:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      XDEBUG_MODE: "off"
+      REVERB_SERVER_HOST: "0.0.0.0"
+      REVERB_SERVER_PORT: "6001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - etp
+
+  # Опционально: docker compose --profile tools up -d pgadmin-etp
   pgadmin-etp:
     image: dpage/pgadmin4:8
     container_name: pgadmin-etp
+    profiles: ["tools"]
     restart: unless-stopped
     ports:
       - "${PGADMIN_PORT:-8081}:80"
@@ -116,34 +201,6 @@ services:
         condition: service_healthy
     networks:
       - etp
-
-  # Раскомментировать после установки Laravel в src/
-  # cron-etp:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/cron/cron.dockerfile
-  #   container_name: cron-etp
-  #   working_dir: /var/www
-  #   volumes:
-  #     - ./src:/var/www
-  #   depends_on:
-  #     - backend-etp
-  #   networks:
-  #     - etp
-
-  # supervisor-etp:
-  #   build:
-  #     context: .
-  #     dockerfile: docker/supervisor/supervisor.dockerfile
-  #   container_name: supervisor-etp
-  #   working_dir: /var/www
-  #   volumes:
-  #     - ./src:/var/www
-  #   depends_on:
-  #     - backend-etp
-  #     - redis-etp
-  #   networks:
-  #     - etp
 
 networks:
   etp:

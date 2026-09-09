@@ -1,0 +1,36 @@
+name: API tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compose env
+        run: |
+          cp .env.example .env
+          cp src/.env.example src/.env
+          echo "REVERB_PORT=6001" >> .env
+
+      - name: Start Postgres and Redis
+        run: docker compose up -d --wait postgres-etp redis-etp mailhog-etp
+
+      - name: Create test database
+        run: docker compose exec -T postgres-etp psql -U etp -d postgres -c "CREATE DATABASE etp_test;" || true
+
+      - name: Install Composer deps in PHP image
+        run: docker compose run --rm --no-deps -e XDEBUG_MODE=off backend-etp composer install --no-interaction --ignore-platform-reqs --no-progress
+
+      - name: Application key
+        run: docker compose run --rm --no-deps -e XDEBUG_MODE=off backend-etp php artisan key:generate --force
+
+      - name: PHPUnit
+        run: docker compose run --rm --no-deps -e XDEBUG_MODE=off backend-etp php artisan test
