@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Broadcasting\VerifyingLogBroadcaster;
 use App\Contracts\ActivityLogRepositoryInterface;
 use App\Contracts\AuthServiceInterface;
 use App\Contracts\ClassifierCategoryRepositoryInterface;
@@ -30,6 +31,7 @@ use App\Services\AuthService;
 use App\Services\StubFpkExportClient;
 use App\Models\AuctionBid;
 use App\Models\Proposal;
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -50,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CmsPageRepositoryInterface::class, CmsPageRepository::class);
         $this->app->bind(ProcedureRepositoryInterface::class, ProcedureRepository::class);
         $this->app->bind(FpkExportClientInterface::class, StubFpkExportClient::class);
+
+        $this->app->booting(function (): void {
+            $this->app->make(BroadcastManager::class)->extend(
+                'verifying_log',
+                fn ($app): VerifyingLogBroadcaster => new VerifyingLogBroadcaster($app['log']),
+            );
+        });
     }
 
     /**

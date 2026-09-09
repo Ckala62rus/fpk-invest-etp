@@ -26,6 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         },
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        [
+            'prefix' => 'api',
+            'middleware' => ['api', 'auth:sanctum'],
+        ],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
         $middleware->alias([
@@ -34,7 +41,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->job(new \App\Jobs\SendAuctionRemindersJob)->everyFifteenMinutes();
+        $schedule->job(new \App\Jobs\SendAuctionInviteScheduleJob)->hourly();
         $schedule->job(new \App\Jobs\FinishIdleAuctionsJob)->everyMinute();
+        $schedule->job(new \App\Jobs\CreateEvaluationSurveysJob)->daily();
+        $schedule->job(new \App\Jobs\SendEvaluationRemindersJob)->daily();
+        $schedule->job(new \App\Jobs\PurgeOldProposalsJob)->daily();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport(DomainException::class);
