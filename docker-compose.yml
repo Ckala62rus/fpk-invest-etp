@@ -98,12 +98,15 @@ services:
       - etp
 
   # Планировщик Laravel: письма аукциона, опросы, автофиниш, очистка КП (фаза 12.3)
+  # user www-data: как PHP-FPM, иначе файлы в storage (протоколы, отчёты) создаются от root
+  # с правами 0700 и скачивание через API даёт 404.
   scheduler-etp:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: scheduler-etp
     working_dir: /var/www
+    user: "www-data:www-data"
     command: ["php", "artisan", "schedule:work"]
     volumes:
       - ./src:/var/www
@@ -123,12 +126,14 @@ services:
       - etp
 
   # Очередь Horizon (фаза 12.1). UI: http://localhost:8200/horizon
+  # Тот же www-data, что и php-fpm: PDF/отчёты/документы читает API без chmod-костылей.
   horizon-etp:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: horizon-etp
     working_dir: /var/www
+    user: "www-data:www-data"
     command: ["php", "artisan", "horizon"]
     volumes:
       - ./src:/var/www

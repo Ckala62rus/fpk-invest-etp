@@ -6,6 +6,7 @@ use App\Enums\ReportFormat;
 use App\Models\ReportRun;
 use App\Models\ReportTemplate;
 use App\Services\ReportQueryService;
+use App\Support\LocalDiskPermissions;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -52,6 +53,8 @@ class GenerateReportJob implements ShouldQueue
             ReportFormat::Doc => $this->writeDoc($dir, $template->name, $columns, $rows),
             default => $this->writePdf($dir, $template->name, $columns, $rows),
         };
+
+        LocalDiskPermissions::ensureWebReadable(Storage::disk('local')->path($path));
 
         $run->update(['file_path' => $path]);
     }

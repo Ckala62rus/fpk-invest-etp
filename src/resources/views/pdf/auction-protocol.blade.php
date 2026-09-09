@@ -20,16 +20,22 @@
                 <th>Лот</th>
                 <th>Стартовая цена</th>
                 <th>Итог</th>
-                <th>Победитель (ID)</th>
+                <th>ИНН победителя</th>
+                <th>Организация / ФИО</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($lots as $lot)
+                @php
+                    $winner = $lot->winner;
+                    $orgName = $winner?->profile?->name;
+                @endphp
                 <tr>
                     <td>{{ $lot->name }}</td>
                     <td>{{ $lot->start_price }}</td>
                     <td>{{ $lot->current_price }}</td>
-                    <td>{{ $lot->winner_user_id ?? '—' }}</td>
+                    <td>{{ $winner?->inn ?? '—' }}</td>
+                    <td>{{ $orgName ?: '—' }}</td>
                 </tr>
             @endforeach
         </tbody>

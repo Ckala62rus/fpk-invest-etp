@@ -80,7 +80,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->renderable(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error('Resource not found', 404);
+                $message = trim((string) $e->getMessage());
+
+                return ApiJsonResponse::error(
+                    $message !== '' ? $message : 'Resource not found',
+                    404,
+                );
             }
         });
 

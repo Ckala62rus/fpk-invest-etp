@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\AuctionProtocol;
 use App\Models\Procedure;
+use App\Support\LocalDiskPermissions;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Формирует PDF-протокол аукциона (фаза 8.11).
+ *
+ * Horizon и scheduler в Docker должны работать от www-data (как PHP-FPM) —
+ * см. user в docker-compose.yml. LocalDiskPermissions — запасной chmod.
  */
 class GenerateAuctionProtocolJob implements ShouldQueue
 {
@@ -36,7 +40,7 @@ class GenerateAuctionProtocolJob implements ShouldQueue
     public function handle(): void
     {
         $procedure = Procedure::query()
-            ->with(['lots'])
+            ->with(['lots.winner.profile'])
             ->find($this->procedureId);
 
         if ($procedure === null) {
@@ -51,6 +55,8 @@ class GenerateAuctionProtocolJob implements ShouldQueue
 
         $path = 'auction-protocols/'.$procedure->id.'/'.now()->format('YmdHis').'.pdf';
         Storage::disk('local')->put($path, $pdf->output());
+
+        LocalDiskPermissions::ensureWebReadable(Storage::disk('local')->path($path));
 
         AuctionProtocol::query()->create([
             'procedure_id' => $procedure->id,

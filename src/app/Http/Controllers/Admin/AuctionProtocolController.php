@@ -79,7 +79,9 @@ class AuctionProtocolController extends ApiController
         }
 
         if (! Storage::disk('local')->exists($protocol->file_path)) {
-            throw new NotFoundHttpException('Файл протокола не найден.');
+            throw new NotFoundHttpException(
+                'Файл протокола не найден на диске. Нажмите «Сгенерировать PDF-протокол» ещё раз.',
+            );
         }
 
         return Storage::disk('local')->download(
