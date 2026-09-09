@@ -19,6 +19,14 @@ final class NotificationTemplateCode
 
     public const AuctionReminderOneHour = 'auction_reminder_1hour';
 
+    public const AuctionInviteCreated = 'auction_invite_created';
+
+    public const AuctionInviteAuctionDay = 'auction_invite_day';
+
+    public const EvaluationSurvey = 'evaluation_survey';
+
+    public const EvaluationSurveyReminder = 'evaluation_survey_reminder';
+
     public const ExternalProcedureInvite = 'external_procedure_invite';
 
     /**
@@ -33,6 +41,10 @@ final class NotificationTemplateCode
             self::BidCancelled,
             self::AuctionReminderOneDay,
             self::AuctionReminderOneHour,
+            self::AuctionInviteCreated,
+            self::AuctionInviteAuctionDay,
+            self::EvaluationSurvey,
+            self::EvaluationSurveyReminder,
             self::ExternalProcedureInvite,
         ];
     }

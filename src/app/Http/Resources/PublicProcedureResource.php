@@ -50,6 +50,14 @@ class PublicProcedureResource extends JsonResource
             'published_at' => $this->published_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
             'results_published' => $this->results_published,
+            // Поля участника (scope=participant) — для формы подачи КП на витрине/в кабинете
+            'custom_fields' => $this->whenLoaded('customFields', function () {
+                $participantFields = $this->customFields
+                    ->filter(static fn ($field) => $field->scope === \App\Enums\CustomFieldScope::Participant)
+                    ->values();
+
+                return ProcedureCustomFieldResource::collection($participantFields)->resolve();
+            }),
         ];
     }
 }

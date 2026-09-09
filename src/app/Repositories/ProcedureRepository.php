@@ -59,7 +59,13 @@ class ProcedureRepository implements ProcedureRepositoryInterface
     public function findPublicById(int $id): ?Procedure
     {
         return Procedure::query()
-            ->with(['company:id,name', 'category:id,name,company_group_id'])
+            ->with([
+                'company:id,name',
+                'category:id,name,company_group_id',
+                'customFields' => static function ($query): void {
+                    $query->orderBy('sort_order')->orderBy('id');
+                },
+            ])
             ->whereKey($id)
             ->where('visibility', ProcedureVisibility::Open)
             ->whereIn('status', self::PUBLIC_STATUSES)
