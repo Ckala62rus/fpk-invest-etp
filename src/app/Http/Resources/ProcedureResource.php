@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ProcedureType;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,6 +33,12 @@ class ProcedureResource extends JsonResource
             'trade_direction' => $this->trade_direction?->value,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
+            // Фаза торгов: пауза не отражена в status (там остаётся in_progress)
+            'auction_trade_status' => $this->auctionTradeStatus()?->value,
+            'auction_trade_status_label' => $this->auctionTradeStatusLabel(),
+            'auction_is_paused' => $this->type === ProcedureType::Auction
+                ? (bool) $this->auctionSetting?->is_paused
+                : null,
             'visibility' => $this->visibility?->value,
             'company_id' => $this->company_id,
             'company' => $this->whenLoaded('company', function () {

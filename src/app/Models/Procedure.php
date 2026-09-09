@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AuctionTradeStatus;
 use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureType;
 use App\Enums\ProcedureVisibility;
@@ -297,5 +298,38 @@ class Procedure extends Model
     public function auctionSessions(): HasMany
     {
         return $this->hasMany(AuctionSession::class);
+    }
+
+    /**
+     * Фаза торгов аукциона для UI (старт / пауза / финиш).
+     *
+     * Пауза не меняет status процедуры (остаётся in_progress), поэтому отдельно смотрим is_paused.
+     *
+     * @return AuctionTradeStatus|null Null, если процедура не аукцион
+     */
+    public function auctionTradeStatus(): ?AuctionTradeStatus
+    {
+        if ($this->type !== ProcedureType::Auction) {
+            return null;
+        }
+
+        $this->loadMissing('auctionSetting');
+
+        return match ($this->status) {
+            ProcedureStatus::Completed => AuctionTradeStatus::Finished,
+            ProcedureStatus::Cancelled => AuctionTradeStatus::Cancelled,
+            ProcedureStatus::InProgress => $this->auctionSetting?->is_paused
+                ? AuctionTradeStatus::Paused
+                : AuctionTradeStatus::Running,
+            default => AuctionTradeStatus::Pending,
+        };
+    }
+
+    /**
+     * Русская подпись фазы торгов (или null для не-аукциона).
+     */
+    public function auctionTradeStatusLabel(): ?string
+    {
+        return $this->auctionTradeStatus()?->label();
     }
 }

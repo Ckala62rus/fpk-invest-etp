@@ -140,6 +140,25 @@ class AuctionTimerServiceTest extends TestCase
     }
 
     /**
+     * idle_timeout_minutes = 0 отключает автозавершение по простою.
+     *
+     * @return void
+     */
+    public function test_idle_timeout_zero_disables_idle_finish(): void
+    {
+        $procedure = $this->makeAuction(
+            [
+                'starts_at' => now()->subHours(3),
+                'ends_at' => now()->addDay(),
+            ],
+            ['idle_timeout_minutes' => 0],
+        );
+
+        $this->assertFalse($this->timer->isIdleTimedOut($procedure, $procedure->auctionSetting));
+        $this->assertFalse($this->timer->shouldAutoFinish($procedure));
+    }
+
+    /**
      * @return void
      */
     public function test_paused_auction_is_not_auto_finished(): void

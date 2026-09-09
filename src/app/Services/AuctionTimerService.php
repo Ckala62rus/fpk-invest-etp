@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * Продление: ставка в последние extension_trigger_minutes (если null — как extension_minutes)
  * сдвигает ends_at на extension_minutes.
  * Простой: нет активных ставок дольше idle_timeout_minutes — пора завершать.
+ * Значение 0 отключает автозавершение по простою.
  */
 class AuctionTimerService
 {
@@ -98,6 +99,9 @@ class AuctionTimerService
     /**
      * Истёк ли простой (нет ставок дольше idle_timeout_minutes).
      *
+     * При idle_timeout_minutes = 0 автозавершение по простою выключено
+     * (торги идут до ends_at или ручного «Финиш»).
+     *
      * @param Procedure $procedure Аукцион
      * @param AuctionSetting $settings Настройки
      * @return bool
@@ -108,7 +112,12 @@ class AuctionTimerService
             return false;
         }
 
-        $idleMinutes = max(1, $settings->idle_timeout_minutes);
+        // 0 = выкл: не завершаем по бездействию
+        if ((int) $settings->idle_timeout_minutes <= 0) {
+            return false;
+        }
+
+        $idleMinutes = (int) $settings->idle_timeout_minutes;
 
         return $this->lastActivityAt($procedure)->lte(now()->subMinutes($idleMinutes));
     }

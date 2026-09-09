@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property AuctionMode $auction_mode Направление аукциона
  * @property int $extension_minutes Продление времени при ставке (минуты)
  * @property int|null $extension_trigger_minutes За сколько минут до конца включается продление
- * @property int $idle_timeout_minutes Автозавершение при отсутствии ставок (минуты)
+ * @property int $idle_timeout_minutes Автозавершение при отсутствии ставок (минуты); 0 — выключено
  * @property bool $forbid_equal_bids Запрет одинаковых ставок
  * @property WinnerMode $winner_mode Способ определения победителя
  * @property bool $only_admitted_from_rfp Только участники, допущенные на 1-м этапе

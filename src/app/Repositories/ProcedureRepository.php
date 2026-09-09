@@ -38,7 +38,7 @@ class ProcedureRepository implements ProcedureRepositoryInterface
     public function paginatePublic(PublicProcedureFilterDTO $filter): LengthAwarePaginator
     {
         $query = Procedure::query()
-            ->with(['company:id,name', 'category:id,name,company_group_id'])
+            ->with(['company:id,name', 'category:id,name,company_group_id', 'auctionSetting'])
             ->where('visibility', ProcedureVisibility::Open)
             ->whereIn('status', self::PUBLIC_STATUSES)
             ->orderByDesc('published_at')
@@ -62,6 +62,7 @@ class ProcedureRepository implements ProcedureRepositoryInterface
             ->with([
                 'company:id,name',
                 'category:id,name,company_group_id',
+                'auctionSetting',
                 'customFields' => static function ($query): void {
                     $query->orderBy('sort_order')->orderBy('id');
                 },
@@ -169,7 +170,7 @@ class ProcedureRepository implements ProcedureRepositoryInterface
     public function paginateAdmin(ProcedureFilterDTO $filter): LengthAwarePaginator
     {
         $query = Procedure::query()
-            ->with(['company:id,name', 'category:id,name', 'responsibleUser:id,inn,email'])
+            ->with(['company:id,name', 'category:id,name', 'responsibleUser:id,inn,email', 'auctionSetting'])
             ->orderByDesc('id');
 
         match ($filter->trashed) {
