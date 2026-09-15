@@ -13,11 +13,13 @@ use App\Http\Controllers\ApiController;
 use App\Http\Requests\Api\Admin\AssignRolesRequest;
 use App\Http\Requests\Api\Admin\BlockUserRequest;
 use App\Http\Requests\Api\Admin\ListUsersRequest;
+use App\Http\Requests\Api\Admin\UpdateUserAdminNotesRequest;
 use App\Http\Resources\UserResource;
 use App\Exceptions\DomainException;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Админское управление пользователями ЭТП (электронной торговой площадки).
@@ -94,6 +96,58 @@ class UserController extends ApiController
         );
 
         return $this->paginated($paginator, 'Список пользователей.');
+    }
+
+    /**
+     * Карточка одного пользователя для модалки в админке (профиль + заметки).
+     *
+     * @param User $user Пользователь
+     * @return JsonResponse
+     */
+    public function show(User $user): JsonResponse
+    {
+        $user->load(['profile', 'roles']);
+
+        return $this->success(
+            new UserResource($user),
+            'Карточка пользователя.',
+        );
+    }
+
+    /**
+     * Сохраняет служебный комментарий о пользователе (только для админов).
+     *
+     * @param UpdateUserAdminNotesRequest $request Текст заметки
+     * @param User $user Цель
+     * @return JsonResponse
+     *
+     * @throws AccessDeniedHttpException
+     */
+    public function updateAdminNotes(UpdateUserAdminNotesRequest $request, User $user): JsonResponse
+    {
+        /** @var User|null $actor */
+        $actor = $request->user();
+
+        if ($actor === null || ! $actor->hasAnyRole(['super_admin', 'trade_admin'])) {
+            throw new AccessDeniedHttpException('Недостаточно прав для служебных заметок.');
+        }
+
+        $user->update([
+            'admin_notes' => $request->validated('admin_notes'),
+        ]);
+
+        activity('user')
+            ->causedBy($actor)
+            ->performedOn($user)
+            ->event('admin_notes_updated')
+            ->log('Обновлены служебные заметки о пользователе');
+
+        $user->load(['profile', 'roles']);
+
+        return $this->success(
+            new UserResource($user),
+            'Служебный комментарий сохранён.',
+        );
     }
 
     /**

@@ -53,8 +53,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\ProposalDocumentController;
 use App\Http\Controllers\ProposalMessageController;
+use App\Http\Controllers\PublicApi\SiteLogoPublicController;
 use App\Http\Controllers\PublicApi\CmsPageController as PublicCmsPageController;
 use App\Http\Controllers\PublicApi\ProcedureController as PublicProcedureController;
+use App\Http\Controllers\PublicApi\ProcedureDocumentController as PublicProcedureDocumentController;
+use App\Http\Controllers\Admin\SiteLogoController;
 use App\Http\Controllers\ServerTimeController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\UserDocumentController;
@@ -98,6 +101,12 @@ Route::get('/server-time', ServerTimeController::class);
 
 // Нужен, чтобы показать список опубликованных страниц CMS (контент-сайт) без входа.
 Route::get('/cms/pages', [PublicCmsPageController::class, 'index']);
+
+// Нужен, чтобы публичная шапка узнала, есть ли загруженный логотип компании.
+// Путь site-logo (не branding): adblock часто блокирует URL со словом branding.
+Route::get('/site-logo', [SiteLogoPublicController::class, 'show']);
+// Нужен, чтобы отдать файл логотипа для <img> на витрине.
+Route::get('/site-logo/file', [SiteLogoPublicController::class, 'file']);
 // Нужен, чтобы открыть одну опубликованную страницу CMS по ЧПУ.
 Route::get('/cms/pages/{slug}', [PublicCmsPageController::class, 'show'])
     ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
@@ -154,6 +163,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     | Фаза 6 — запрос предложений (КП), сторона участника
     |--------------------------------------------------------------------------
     */
+    // Нужен, чтобы авторизованный пользователь скачал документацию ТЗП (гостю не видно).
+    Route::get('/procedures/{procedure}/documents/{document}/download', [PublicProcedureDocumentController::class, 'download'])
+        ->whereNumber('procedure')
+        ->whereNumber('document');
+
         // Нужен, чтобы участник подал КП на запрос предложений.
         Route::post('/procedures/{procedure}/proposals', [ProposalController::class, 'store'])
         ->middleware('role:participant')
@@ -216,6 +230,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
     // Нужен, чтобы найти и отфильтровать пользователей в админке.
     Route::get('/admin/users', [UserController::class, 'index'])
         ->middleware('role:super_admin|trade_admin|auditor');
+    // Нужен, чтобы открыть карточку одного пользователя в модалке (профиль, заметки).
+    Route::get('/admin/users/{user}', [UserController::class, 'show'])
+        ->middleware('role:super_admin|trade_admin|auditor')
+        ->whereNumber('user');
+    // Нужен, чтобы сохранить служебный комментарий админа о пользователе.
+    Route::put('/admin/users/{user}/admin-notes', [UserController::class, 'updateAdminNotes'])
+        ->middleware('role:super_admin|trade_admin')
+        ->whereNumber('user');
     // Нужен, чтобы одобрить регистрацию участника.
     Route::post('/admin/users/{user}/approve', [UserApprovalController::class, 'store'])
         ->middleware('role:super_admin|trade_admin');
@@ -498,6 +520,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/admin/settings', [SettingController::class, 'index']);
         // Нужен, чтобы изменить глобальные сроки площадки.
         Route::put('/admin/settings', [SettingController::class, 'update']);
+        // Нужен, чтобы загрузить логотип компании для публичной шапки.
+        Route::post('/admin/settings/logo', [SiteLogoController::class, 'store']);
+        // Нужен, чтобы удалить логотип и вернуть оформление по умолчанию («ФИ»).
+        Route::delete('/admin/settings/logo', [SiteLogoController::class, 'destroy']);
 
         // Нужен, чтобы показать шаблоны доп. условий.
         Route::get('/admin/extra-condition-templates', [ExtraConditionTemplateController::class, 'index']);

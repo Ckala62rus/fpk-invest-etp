@@ -87,7 +87,14 @@ class ProposalController extends ApiController
             throw new AccessDeniedHttpException('Доступна только своя заявка.');
         }
 
-        $proposal->load(['fieldValues.customField', 'documents', 'admissionDecision']);
+        $proposal->load([
+            'fieldValues.customField',
+            'documents',
+            'admissionDecision',
+            'procedure.documents' => static function ($query): void {
+                $query->orderByDesc('id');
+            },
+        ]);
 
         return $this->success(
             new ProposalResource($proposal),

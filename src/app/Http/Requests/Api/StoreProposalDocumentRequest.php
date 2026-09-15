@@ -43,7 +43,7 @@ class StoreProposalDocumentRequest extends FormRequest
         return [
             'document.required' => 'Прикрепите файл документа.',
             'document.file' => 'Документ должен быть файлом.',
-            'document.mimes' => 'Допустимые форматы: pdf, doc, docx, xls, xlsx, zip.',
+            'document.mimes' => 'Этот формат файла не подходит. Загрузите PDF, Word (doc, docx), Excel (xls, xlsx) или ZIP. Изображения (JPG, PNG) и другие типы не принимаются.',
             'document.max' => 'Размер файла не должен превышать 20 МБ.',
             'type.string' => 'Тип документа должен быть строкой.',
             'type.max' => 'Тип документа не должен превышать :max символов.',

@@ -65,6 +65,20 @@ class PublicProcedureResource extends JsonResource
 
                 return ProcedureCustomFieldResource::collection($participantFields)->resolve();
             }),
+            // Конкурсная документация ТЗП — только авторизованным (гостю не отдаём список)
+            'documents' => $this->when(
+                $request->user() !== null && $this->relationLoaded('documents'),
+                function () {
+                    return $this->documents->map(static function ($doc): array {
+                        return [
+                            'id' => $doc->id,
+                            'file_name' => $doc->file_name,
+                            'version' => $doc->version,
+                            'created_at' => $doc->created_at?->toIso8601String(),
+                        ];
+                    })->values()->all();
+                },
+            ),
         ];
     }
 }

@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Europe/Moscow: даты ТЗП в админке (naive datetime) совпадают с отображением на витрине
+    'timezone' => env('APP_TIMEZONE', 'Europe/Moscow'),
 
     /*
     |--------------------------------------------------------------------------

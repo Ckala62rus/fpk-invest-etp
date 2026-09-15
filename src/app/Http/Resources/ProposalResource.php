@@ -37,10 +37,24 @@ class ProposalResource extends JsonResource
                     'title' => $this->procedure->title,
                     'type' => $this->procedure->type?->value,
                     'type_label' => $this->procedure->type?->label(),
+                    // Конкурсная документация ТЗП (загружает админ) — для ознакомления участника
+                    'documents' => $this->procedure->relationLoaded('documents')
+                        ? $this->procedure->documents->map(static function ($doc): array {
+                            return [
+                                'id' => $doc->id,
+                                'file_name' => $doc->file_name,
+                                'version' => $doc->version,
+                                'created_at' => $doc->created_at?->toIso8601String(),
+                            ];
+                        })->values()->all()
+                        : [],
                 ];
             }),
             'field_values' => ProposalFieldValueResource::collection(
                 $this->whenLoaded('fieldValues')
+            ),
+            'documents' => ProposalDocumentResource::collection(
+                $this->whenLoaded('documents')
             ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

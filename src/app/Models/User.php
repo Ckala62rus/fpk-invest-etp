@@ -28,6 +28,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserStatus $status Статус учётной записи
  * @property \Illuminate\Support\Carbon|null $blocked_until Период блокировки до
  * @property string|null $block_reason Причина блокировки
+ * @property string|null $admin_notes Служебные заметки администратора о пользователе
  * @property int $failed_login_attempts Счётчик неудачных входов
  * @property \Illuminate\Support\Carbon|null $email_verified_at Подтверждение email
  * @property \Illuminate\Support\Carbon|null $approved_at Дата активации администратором
@@ -41,6 +42,7 @@ use Spatie\Permission\Traits\HasRoles;
     'status',
     'blocked_until',
     'block_reason',
+    'admin_notes',
     'failed_login_attempts',
     'email_verified_at',
     'approved_at',

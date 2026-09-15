@@ -29,6 +29,11 @@ class UserResource extends JsonResource
             'approved_at' => $this->approved_at?->toIso8601String(),
             'blocked_until' => $this->blocked_until?->toIso8601String(),
             'block_reason' => $this->block_reason,
+            // Служебное поле доступно только главным администраторам и администраторам торгов.
+            'admin_notes' => $this->when(
+                $request->user()?->hasAnyRole(['super_admin', 'trade_admin']) ?? false,
+                $this->admin_notes,
+            ),
             'deleted_at' => $this->deleted_at?->toIso8601String(),
             'roles' => $this->whenLoaded('roles', fn () => $this->getRoleNames()->values()),
             'profile' => new UserProfileResource($this->whenLoaded('profile')),

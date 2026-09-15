@@ -63,6 +63,9 @@ class ProcedureRepository implements ProcedureRepositoryInterface
                 'company:id,name',
                 'category:id,name,company_group_id',
                 'auctionSetting',
+                'documents' => static function ($query): void {
+                    $query->orderByDesc('id');
+                },
                 'customFields' => static function ($query): void {
                     $query->orderBy('sort_order')->orderBy('id');
                 },

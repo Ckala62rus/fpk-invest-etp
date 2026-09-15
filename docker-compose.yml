@@ -153,12 +153,14 @@ services:
       - etp
 
   # WebSocket Laravel Reverb (фаза 12.2). Nginx API на 8200. SPA Echo: localhost:6001
+  # www-data: иначе логи в storage/logs создаются от root (644) и PHP-FPM получает Permission denied.
   reverb-etp:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: reverb-etp
     working_dir: /var/www
+    user: "www-data:www-data"
     command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
     ports:
       - "${REVERB_PORT:-6001}:6001"

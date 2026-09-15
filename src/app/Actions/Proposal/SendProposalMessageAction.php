@@ -131,7 +131,11 @@ class SendProposalMessageAction
             ];
             if (! in_array($proposal->status, $allowed, true)) {
                 throw new DomainException(
-                    message: 'Уточнение можно запросить только для поданной или рассматриваемой заявки.',
+                    message: $this->statusRestrictionMessage(
+                        current: $proposal->status,
+                        allowed: $allowed,
+                        action: 'запросить уточнение',
+                    ),
                     statusCode: 422,
                 );
             }
@@ -148,10 +152,64 @@ class SendProposalMessageAction
 
         if (! in_array($proposal->status, $chatAllowed, true)) {
             throw new DomainException(
-                message: 'Переписка по этой заявке недоступна на текущем статусе.',
+                message: $this->statusRestrictionMessage(
+                    current: $proposal->status,
+                    allowed: $chatAllowed,
+                    action: 'писать в переписке',
+                ),
                 statusCode: 422,
             );
         }
+    }
+
+    /**
+     * Текст ошибки: текущий статус КП и список допустимых (для участника и админа).
+     *
+     * @param ProposalStatus $current Текущий статус заявки
+     * @param list<ProposalStatus> $allowed Статусы, при которых действие разрешено
+     * @param string $action Кратко, что нельзя сделать («писать в переписке» / «запросить уточнение»)
+     * @return string Сообщение на русском для API/UI
+     */
+    private function statusRestrictionMessage(
+        ProposalStatus $current,
+        array $allowed,
+        string $action,
+    ): string {
+        $allowedLabels = array_map(
+            static fn (ProposalStatus $status): string => '«'.$status->label().'»',
+            $allowed,
+        );
+
+        return sprintf(
+            'Нельзя %s: заявка в статусе «%s». Нужен один из статусов: %s.',
+            $action,
+            $current->label(),
+            $this->joinRussianLabels($allowedLabels),
+        );
+    }
+
+    /**
+     * Склеивает подписи статусов: «A», «B» или «C».
+     *
+     * @param list<string> $labels Подписи уже в кавычках-ёлочках
+     * @return string Фраза для сообщения пользователю
+     */
+    private function joinRussianLabels(array $labels): string
+    {
+        $count = count($labels);
+        if ($count === 0) {
+            return '';
+        }
+        if ($count === 1) {
+            return $labels[0];
+        }
+        if ($count === 2) {
+            return $labels[0].' или '.$labels[1];
+        }
+
+        $last = array_pop($labels);
+
+        return implode(', ', $labels).' или '.$last;
     }
 
     /**

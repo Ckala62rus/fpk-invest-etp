@@ -83,6 +83,51 @@ class UserListTest extends TestCase
     }
 
     /**
+     * Аудитор видит карточку пользователя, но не внутренние заметки администратора.
+     *
+     * @return void
+     */
+    public function test_auditor_cannot_read_admin_notes_in_user_card(): void
+    {
+        /** @var User&Authenticatable $auditor */
+        $auditor = User::factory()->create();
+        $auditor->assignRole('auditor');
+
+        $target = User::factory()->create([
+            'admin_notes' => 'Служебная заметка для администраторов.',
+        ]);
+        $target->assignRole('participant');
+
+        $this->actingAs($auditor)
+            ->getJson("/api/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $target->id)
+            ->assertJsonMissingPath('data.admin_notes');
+    }
+
+    /**
+     * Администратор торгов видит внутренние заметки в карточке пользователя.
+     *
+     * @return void
+     */
+    public function test_trade_admin_can_read_admin_notes_in_user_card(): void
+    {
+        /** @var User&Authenticatable $administrator */
+        $administrator = User::factory()->create();
+        $administrator->assignRole('trade_admin');
+
+        $target = User::factory()->create([
+            'admin_notes' => 'Служебная заметка для администраторов.',
+        ]);
+        $target->assignRole('participant');
+
+        $this->actingAs($administrator)
+            ->getJson("/api/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertJsonPath('data.admin_notes', 'Служебная заметка для администраторов.');
+    }
+
+    /**
      * Фильтр status возвращает только пользователей с указанным статусом.
      *
      * @return void

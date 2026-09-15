@@ -34,6 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // За reverse-proxy (deploy gateway) нужен X-Forwarded-Proto, иначе cookies/HTTPS ломаются
+        $middleware->trustProxies(at: '*');
         $middleware->statefulApi();
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
@@ -56,25 +58,33 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->renderable(function (ValidationException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error('Validation failed', 422, $e->errors());
+                $first = collect($e->errors())->flatten()->first();
+
+                return ApiJsonResponse::error(
+                    is_string($first) && $first !== ''
+                        ? $first
+                        : 'Проверьте правильность заполнения полей.',
+                    422,
+                    $e->errors(),
+                );
             }
         });
 
         $exceptions->renderable(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error($e->getMessage() ?: 'Unauthorized', 401);
+                return ApiJsonResponse::error($e->getMessage() ?: 'Требуется авторизация.', 401);
             }
         });
 
         $exceptions->renderable(function (AccessDeniedHttpException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error('Forbidden', 403);
+                return ApiJsonResponse::error($e->getMessage() ?: 'Доступ запрещён.', 403);
             }
         });
 
         $exceptions->renderable(function (ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*')) {
-                return ApiJsonResponse::error('Resource not found', 404);
+                return ApiJsonResponse::error('Ресурс не найден.', 404);
             }
         });
 

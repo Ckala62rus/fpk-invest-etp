@@ -129,14 +129,17 @@ class AuthEndpointsTest extends TestCase
     public function test_authenticated_user_can_read_me_and_log_out(): void
     {
         /** @var User&Authenticatable $user */
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'admin_notes' => 'Служебная заметка администратора.',
+        ]);
         $user->assignRole('participant');
 
         $this->actingAs($user)
             ->getJson('/api/auth/me')
             ->assertOk()
             ->assertJsonPath('data.id', $user->id)
-            ->assertJsonPath('data.roles.0', 'participant');
+            ->assertJsonPath('data.roles.0', 'participant')
+            ->assertJsonMissingPath('data.admin_notes');
 
         $this->actingAs($user)
             ->postJson('/api/auth/logout')
