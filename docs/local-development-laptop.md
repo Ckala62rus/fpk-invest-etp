@@ -75,7 +75,10 @@ docker compose exec -T backend-etp php artisan migrate --force
 docker compose exec -T backend-etp php artisan db:seed --force
 docker compose exec -T backend-etp php artisan storage:link
 docker compose exec -T backend-etp php artisan config:clear
+docker compose exec -T backend-etp chown -R www-data:www-data storage bootstrap/cache
 ```
+
+Последняя команда обязательна для bind mount: PHP-FPM, Horizon, scheduler и Reverb работают под `www-data` и должны иметь право писать в `storage` и `bootstrap/cache`.
 
 После успешного `composer install` запустите фоновые сервисы и убедитесь, что все контейнеры имеют статус `Up`:
 
@@ -228,6 +231,7 @@ docker compose exec -T backend-etp php artisan db:seed --force
 | --- | --- |
 | `502` или API не отвечает | `docker compose ps`, затем `docker compose logs backend-etp nginx-etp`. |
 | `scheduler-etp`, `horizon-etp` или `reverb-etp` перезапускаются с `vendor/autoload.php: No such file or directory` | Установите зависимости: `docker compose exec -T backend-etp composer install --no-interaction --no-progress --ignore-platform-reqs`, затем `docker compose up -d`. На чистом checkout используйте двухэтапный первый запуск из раздела 3. |
+| `Permission denied` для `storage/logs/laravel.log` | Выполните `docker compose exec -T backend-etp chown -R www-data:www-data storage bootstrap/cache`, затем повторите запрос. |
 | Frontend показывает ошибки сети | Убедитесь, что backend работает на `8200`, а `frontend\.env.docker` содержит `API_UPSTREAM=http://host.docker.internal:8200`; затем перезапустите `frontend-dev`. |
 | Не приходит сессия или `401` после login | Не задавайте `VITE_API_BASE_URL`; запросы должны идти через Vite proxy на относительный `/api`. |
 | WebSocket не подключается | Проверьте `docker compose ps reverb-etp`, совпадение `REVERB_APP_KEY` в `backend\src\.env` и `VITE_REVERB_APP_KEY` во `frontend\.env`, затем перезапустите frontend. |
@@ -243,6 +247,7 @@ docker compose up -d --build
 docker compose exec -T backend-etp composer install --no-interaction --no-progress --ignore-platform-reqs
 docker compose exec -T backend-etp php artisan migrate --force
 docker compose exec -T backend-etp php artisan config:clear
+docker compose exec -T backend-etp chown -R www-data:www-data storage bootstrap/cache
 
 Set-Location 'D:\Projects\etp\frontend'
 git pull origin master
