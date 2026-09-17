@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\PublicApi;
 
-use App\Enums\ProcedureVisibility;
+use App\Contracts\ProcedureRepositoryInterface;
 use App\Http\Controllers\ApiController;
-use App\Models\Procedure;
 use App\Models\ProcedureDocument;
-use App\Repositories\ProcedureRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -21,6 +19,15 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ProcedureDocumentController extends ApiController
 {
     /**
+     * @param ProcedureRepositoryInterface $procedures Репозиторий процедур
+     * @return void
+     */
+    public function __construct(
+        private readonly ProcedureRepositoryInterface $procedures,
+    ) {
+    }
+
+    /**
      * Отдаёт файл документа открытой опубликованной ТЗП.
      *
      * @param Request $request HTTP (?inline=1 — просмотр PDF)
@@ -32,11 +39,7 @@ class ProcedureDocumentController extends ApiController
      */
     public function download(Request $request, int $procedure, int $document): StreamedResponse
     {
-        $model = Procedure::query()
-            ->whereKey($procedure)
-            ->where('visibility', ProcedureVisibility::Open)
-            ->whereIn('status', ProcedureRepository::PUBLIC_STATUSES)
-            ->first();
+        $model = $this->procedures->findPublicById($procedure);
 
         if ($model === null) {
             throw new NotFoundHttpException('Процедура не найдена.');

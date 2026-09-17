@@ -5,7 +5,10 @@ namespace Tests\Feature\PublicApi;
 use App\Enums\ProcedureStatus;
 use App\Enums\ProcedureVisibility;
 use App\Models\Procedure;
+use App\Models\ProcedureDocument;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -102,5 +105,35 @@ class PublicProcedureTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.title', 'Поставка бетона');
+    }
+
+    /**
+     * Авторизованный пользователь скачивает документ открытой опубликованной процедуры.
+     *
+     * @return void
+     */
+    public function test_authenticated_user_can_download_document_of_open_published_procedure(): void
+    {
+        Storage::fake('local');
+
+        $procedure = Procedure::factory()->published()->create([
+            'visibility' => ProcedureVisibility::Open,
+        ]);
+        $path = 'procedure_documents/'.$procedure->id.'/tender.pdf';
+        Storage::disk('local')->put($path, 'tender documentation');
+
+        $uploader = User::factory()->create();
+        $document = ProcedureDocument::query()->create([
+            'procedure_id' => $procedure->id,
+            'file_path' => $path,
+            'file_name' => 'tender.pdf',
+            'version' => 1,
+            'uploaded_by' => $uploader->id,
+        ]);
+
+        $this->actingAs($uploader)
+            ->get('/api/procedures/'.$procedure->id.'/documents/'.$document->id.'/download')
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=tender.pdf');
     }
 }
