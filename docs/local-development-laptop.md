@@ -114,6 +114,8 @@ Copy-Item '.env.example.docker' '.env.docker'
 
 Не изменяйте скопированные значения в `frontend\.env`, если используются стандартные порты. В частности, оставьте пустым `VITE_API_BASE_URL`, а также сохраните `VITE_REVERB_ENABLED`, `VITE_REVERB_APP_KEY`, `VITE_REVERB_HOST` и `VITE_REVERB_PORT` из примера. Для Docker-запуска Vite значение `API_UPSTREAM` берётся из `frontend\.env.docker`.
 
+Если занят порт frontend, измените `FRONTEND_HTTP_PORT` в `frontend\.env.docker` — `VITE_DEV_PORT` при Docker-запуске не меняет опубликованный порт. Затем обновите `FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS` и `VITE_APP_ORIGIN` на новый origin в соответствующих backend- и frontend-файлах `.env`. При смене API-порта дополнительно измените `API_UPSTREAM` в `frontend\.env.docker` и `VITE_HORIZON_URL` в `frontend\.env`.
+
 Запустите Vite с HMR в Docker:
 
 ```powershell
