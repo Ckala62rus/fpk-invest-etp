@@ -232,6 +232,7 @@ docker compose exec -T backend-etp php artisan db:seed --force
 | `502` или API не отвечает | `docker compose ps`, затем `docker compose logs backend-etp nginx-etp`. |
 | `scheduler-etp`, `horizon-etp` или `reverb-etp` перезапускаются с `vendor/autoload.php: No such file or directory` | Установите зависимости: `docker compose exec -T backend-etp composer install --no-interaction --no-progress --ignore-platform-reqs`, затем `docker compose up -d`. На чистом checkout используйте двухэтапный первый запуск из раздела 3. |
 | `Permission denied` для `storage/logs/laravel.log` | Выполните `docker compose exec -T backend-etp chown -R www-data:www-data storage bootstrap/cache`, затем повторите запрос. |
+| Ссылка подтверждения email начинается с `host.docker.internal` | Проверьте `APP_URL=http://localhost:8200` в `backend\src\.env`, выполните `docker compose exec -T backend-etp php artisan config:clear` и запросите новое письмо. Уже отправленную signed-ссылку не редактируйте: её подпись включает origin. |
 | Frontend показывает ошибки сети | Убедитесь, что backend работает на `8200`, а `frontend\.env.docker` содержит `API_UPSTREAM=http://host.docker.internal:8200`; затем перезапустите `frontend-dev`. |
 | Не приходит сессия или `401` после login | Не задавайте `VITE_API_BASE_URL`; запросы должны идти через Vite proxy на относительный `/api`. |
 | WebSocket не подключается | Проверьте `docker compose ps reverb-etp`, совпадение `REVERB_APP_KEY` в `backend\src\.env` и `VITE_REVERB_APP_KEY` во `frontend\.env`, затем перезапустите frontend. |
