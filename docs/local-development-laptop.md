@@ -59,10 +59,10 @@ Copy-Item 'src\.env.example' 'src\.env'
 
 Если один из портов занят, измените его в `backend\.env`. При изменении API-порта для Docker-frontend обновите `API_UPSTREAM=http://host.docker.internal:<новый-порт>` в `frontend\.env.docker`. `VITE_API_PROXY_TARGET` в `frontend\.env` используется при запуске Vite вне Docker.
 
-Запустите контейнеры:
+При **первом запуске** поднимите только инфраструктуру и PHP-FPM. Не запускайте сразу весь Compose: `scheduler-etp`, `horizon-etp` и `reverb-etp` выполняют `php artisan` и до установки Composer-зависимостей будут перезапускаться с ошибкой `vendor/autoload.php: No such file or directory`.
 
 ```powershell
-docker compose up -d --build
+docker compose up -d --build postgres-etp redis-etp mailhog-etp backend-etp nginx-etp
 docker compose ps
 ```
 
@@ -75,6 +75,13 @@ docker compose exec -T backend-etp php artisan migrate --force
 docker compose exec -T backend-etp php artisan db:seed --force
 docker compose exec -T backend-etp php artisan storage:link
 docker compose exec -T backend-etp php artisan config:clear
+```
+
+После успешного `composer install` запустите фоновые сервисы и убедитесь, что все контейнеры имеют статус `Up`:
+
+```powershell
+docker compose up -d
+docker compose ps
 ```
 
 > Временное ограничение проекта: `src/composer.json` требует PHP 8.4, а текущий Dockerfile собирается на PHP 8.3. Поэтому существующий bootstrap-скрипт также использует `--ignore-platform-reqs`. Перед новым стабильным development-окружением Dockerfile нужно обновить до PHP 8.4, а затем убрать этот временный параметр.
@@ -218,6 +225,7 @@ docker compose exec -T backend-etp php artisan db:seed --force
 | Симптом | Проверка / решение |
 | --- | --- |
 | `502` или API не отвечает | `docker compose ps`, затем `docker compose logs backend-etp nginx-etp`. |
+| `scheduler-etp`, `horizon-etp` или `reverb-etp` перезапускаются с `vendor/autoload.php: No such file or directory` | Установите зависимости: `docker compose exec -T backend-etp composer install --no-interaction --no-progress --ignore-platform-reqs`, затем `docker compose up -d`. На чистом checkout используйте двухэтапный первый запуск из раздела 3. |
 | Frontend показывает ошибки сети | Убедитесь, что backend работает на `8200`, а `frontend\.env.docker` содержит `API_UPSTREAM=http://host.docker.internal:8200`; затем перезапустите `frontend-dev`. |
 | Не приходит сессия или `401` после login | Не задавайте `VITE_API_BASE_URL`; запросы должны идти через Vite proxy на относительный `/api`. |
 | WebSocket не подключается | Проверьте `docker compose ps reverb-etp`, совпадение `REVERB_APP_KEY` в `backend\src\.env` и `VITE_REVERB_APP_KEY` во `frontend\.env`, затем перезапустите frontend. |
