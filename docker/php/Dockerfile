@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk update && apk upgrade
 
@@ -36,12 +36,20 @@ RUN docker-php-ext-configure gd \
       exif \
       sockets
 
-RUN pecl install redis \
-    && docker-php-ext-enable redis
+# PECL недоступен из части production-сетей, поэтому собираем закреплённую
+# версию phpredis из исходников GitHub. PHPIZE_DEPS уже установлен выше.
+ARG PHPREDIS_VERSION=6.1.0
+RUN git clone --depth 1 --branch "${PHPREDIS_VERSION}" \
+      https://github.com/phpredis/phpredis.git /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure \
+    && make -j"$(nproc)" \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis
 
-# Xdebug (dev). Отключить в production-сборке при необходимости.
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
+# Xdebug намеренно не включается в production-образ.
 
 # Удаляем только -dev пакеты; runtime-библиотеки для .so оставляем явно
 RUN apk del --no-cache \
